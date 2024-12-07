@@ -1,0 +1,6 @@
+@Ma5zonyProject_HostAddress = http://localhost:5268
+
+GET {{Ma5zonyProject_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
