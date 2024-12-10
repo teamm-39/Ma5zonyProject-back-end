@@ -16,5 +16,7 @@ namespace Models.Models
 
         public string ApplicationUserId  { get; set; }
         public ApplicationUser ApplicationUser { get; set; }
+        public int CustomerId { get; set; }
+        public Customer Customer { get; set; }
     }
 }
