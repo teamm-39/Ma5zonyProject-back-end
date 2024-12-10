@@ -1,4 +1,6 @@
 
+using Microsoft.AspNetCore.Identity;
+using Models.Models;
 namespace Ma5zonyProject
 {
     public class Program
@@ -13,6 +15,9 @@ namespace Ma5zonyProject
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+            //builder.services.addscoped
+            //1-Configure Identity User&Roles
+            builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
 
             var app = builder.Build();
 

@@ -8,9 +8,9 @@ namespace Models.Models
 {
     public class UserMangeUser
     {
-        public string UserId { get; set; }
+        public string ApplicationUserId { get; set; }
         public ApplicationUser ApplicationUser { get; set; }
-        public string EmployeeId { get; set; }
+        public string? EmployeeId { get; set; }
         public ApplicationUser Employee {  get; set; }
     }
 }
