@@ -14,6 +14,7 @@ namespace Models.Models
         public int Quantity { get; set; }
 
         public ICollection<StoreProducts> StoreProducts { get; set; }
+        public ICollection<UserMangeProduct> UserMangeProducts { get; set; }
         public ICollection<ProductExports> ProductExports { get; set; }
         public ICollection<ProductImports> ProductImports { get; set; }
     }

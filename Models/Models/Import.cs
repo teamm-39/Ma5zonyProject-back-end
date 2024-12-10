@@ -16,7 +16,9 @@ namespace Models.Models
 
         public string ApplicationUserId { get; set; }
         public ApplicationUser ApplicationUser { get; set; }
+        public ICollection<ProductImports> ProductImports { get; set; }
         public int SupplierId { get; set; }
         public Supplier Supplier { get; set; }
+
     }
 }

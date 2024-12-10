@@ -15,6 +15,9 @@ namespace Models.Models
 
         public int? StoreId { get; set; }
         public Store? Store { get; set; }
+        public ICollection<UserMangeUser> UserMangeUsers { get; set; }
+        public ICollection<UserMangeStore> UserMangeStores { get; set; }
+        public ICollection<UserMangeProduct> UserMangeProducts { get; set; }
         public ICollection<Export> Exports { get; set; }
         public ICollection<Import> Imports { get; set; }
     }
