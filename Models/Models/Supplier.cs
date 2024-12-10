@@ -11,5 +11,7 @@ namespace Models.Models
         public int SupplierId { get; set; }
         public string Name { get; set; }
         public string Address { get; set; }
+
+        public ICollection<Import> Imports { get; set; }
     }
 }

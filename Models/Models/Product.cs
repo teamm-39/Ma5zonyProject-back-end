@@ -12,5 +12,9 @@ namespace Models.Models
         public string Name { get; set; }
         public double Price { get; set; }
         public int Quantity { get; set; }
+
+        public ICollection<StoreProducts> StoreProducts { get; set; }
+        public ICollection<ProductExports> ProductExports { get; set; }
+        public ICollection<ProductImports> ProductImports { get; set; }
     }
 }

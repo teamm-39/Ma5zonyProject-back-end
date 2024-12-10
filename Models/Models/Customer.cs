@@ -11,5 +11,7 @@ namespace Models.Models
         public int CustomerId { get; set; }
         public string Name { get; set; }
         public string Address { get; set; }
+
+        public ICollection<Export> Exports { get; set; }
     }
 }
