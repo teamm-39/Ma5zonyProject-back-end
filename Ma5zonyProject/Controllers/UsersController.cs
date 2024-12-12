@@ -9,7 +9,6 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Ma5zonyProject.Controllers
 {
-    [IgnoreAntiforgeryToken]
     [Route("api/[controller]")]
     [ApiController]
     public class UsersController : ControllerBase
