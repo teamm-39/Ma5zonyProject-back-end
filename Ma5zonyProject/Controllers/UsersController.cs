@@ -32,7 +32,7 @@ namespace Ma5zonyProject.Controllers
             var result = new Result<List<ApplicationUser>>(true, total, total, 1, users);
             return Ok(result);
         }
-        [HttpPost]
+        [HttpPost("sign-up")]
         public async Task<ActionResult> Register(UserRegisterVM user)
         {
             if (_roleManager.Roles.IsNullOrEmpty())
@@ -84,7 +84,7 @@ namespace Ma5zonyProject.Controllers
                     result.IsSuccess = true;
                     return Ok(result);
                 }
-                return BadRequest(result);
+                return Ok(result);
             }
             return BadRequest(result);
         }

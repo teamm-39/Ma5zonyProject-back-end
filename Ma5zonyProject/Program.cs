@@ -1,4 +1,4 @@
-
+﻿
 using DataAccess.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -18,7 +18,16 @@ namespace Ma5zonyProject
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
             //builder.services.addscoped
-                //DbContext
+            //DbContext
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAll", policy =>
+                {
+                    policy.AllowAnyOrigin()   // يسمح بأي أصل (يمكنك تخصيصه بنطاقات معينة)
+                          .AllowAnyMethod()   // يسمح بأي نوع من الطلبات (GET, POST, PUT, DELETE, إلخ)
+                          .AllowAnyHeader();  // يسمح بأي رأس
+                });
+            });
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
             options.UseSqlServer(builder.Configuration.GetConnectionString("DeafultConnection")));
             //1-Configure Identity User&Roles
@@ -34,7 +43,7 @@ namespace Ma5zonyProject
             }
 
             app.UseHttpsRedirection();
-
+            app.UseCors("AllowAll");
             app.UseAuthorization();
 
 
