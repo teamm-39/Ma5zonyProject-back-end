@@ -36,7 +36,11 @@ namespace Ma5zonyProject
             //
             builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
             builder.Services.AddScoped<CustomerIRepo, CustomerRepo>();
-
+            builder.Services.AddScoped<ExportIRepo, ExportRepo>();
+            builder.Services.AddScoped<ImportIRepo, ImportRepo>();
+            builder.Services.AddScoped<ProductIRepo, ProductRepo>();
+            builder.Services.AddScoped<StoreIRepo, StoreRepo>();
+            builder.Services.AddScoped<SupplierIRepo, SupplierRepo>();
             //
             var app = builder.Build();
 
