@@ -10,10 +10,10 @@ namespace Ma5zonyProject.Controllers
     [ApiController]
     public class UserMangeProductController : ControllerBase
     {
-        private UserMangerProductIRepo _UserMangerProductI;
+        private UserMangerProductIRepo _userMangerProductI;
         public UserMangeProductController(UserMangerProductIRepo userMangerProductI0)
         {
-            _UserMangerProductI = userMangerProductI0;
+            _userMangerProductI = userMangerProductI0;
         }
     }
 }

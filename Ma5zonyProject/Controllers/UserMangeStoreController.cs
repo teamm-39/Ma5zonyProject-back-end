@@ -10,7 +10,7 @@ namespace Ma5zonyProject.Controllers
     [ApiController]
     public class UserMangerStoreController : ControllerBase
     {
-        private UserMangerStoreIRepo UserMangeStoreI;
+        private UserMangerStoreIRepo _userMangeStore;
         public UserMangerStoreController(UserMangerStoreIRepo userMangeStoreI)
         {
             _userMangeStore = userMangeStoreI;
