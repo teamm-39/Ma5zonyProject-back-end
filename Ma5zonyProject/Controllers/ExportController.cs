@@ -10,11 +10,10 @@ namespace Ma5zonyProject.Controllers
     [ApiController]
     public class ExportController : ControllerBase
     {
-        private ExportIRepo _store;
+        private ExportIRepo _export;
 
-        public ExportController(ExportIRepo store)
+        public ExportController(ExportIRepo export)
         {
-            _store = store;
+            _export = export;
         }
     }
-}

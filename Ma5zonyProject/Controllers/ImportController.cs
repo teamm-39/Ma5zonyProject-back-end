@@ -10,11 +10,10 @@ namespace Ma5zonyProject.Controllers
     [ApiController]
     public class ImportController : ControllerBase
     {
-        private ImportIRepo _store;
+        private ImportIRepo _import;
 
-        public ImportController(ImportIRepo store)
+        public ImportController(ImportIRepo import)
         {
-            _store = store;
+            _import = import;
         }
     }
-}

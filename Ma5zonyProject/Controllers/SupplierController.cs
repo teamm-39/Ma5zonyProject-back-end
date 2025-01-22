@@ -8,11 +8,10 @@ namespace Ma5zonyProject.Controllers
     [ApiController]
     public class SupplierController : ControllerBase
     {
-        private SupplierIRepo _store;
+        private SupplierIRepo _supplier;
 
-        public SupplierController(SupplierIRepo store)
+        public SupplierController(SupplierIRepo supplier)
         {
-            _store = store;
+            _supplier = supplier;
         }
     }
-}

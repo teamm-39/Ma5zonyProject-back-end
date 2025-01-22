@@ -10,11 +10,10 @@ namespace Ma5zonyProject.Controllers
     [ApiController]
     public class CustomerController : ControllerBase
     {
-        private CustomerIRepo _store;
+        private CustomerIRepo _customer;
 
-        public CustomerController(CustomerIRepo store)
+        public CustomerController(CustomerIRepo customer)
         {
-            _store = store;
+            _customer = customer;
         }
     }
-}
