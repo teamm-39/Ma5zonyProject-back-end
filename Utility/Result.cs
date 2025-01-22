@@ -14,12 +14,12 @@ namespace Utility
         public int PageNumber { get; set; }
         public T? Data { get; set; }
         public string Meesage { get; set; }
-        public Result(bool isSuccess = false, int total = 0, int pageSize = 0, int pageNumner = 0, T? data = default,string message="" )
+        public Result(bool isSuccess = false, int total = 0, int pageSize = 0, int pageNumber = 0, T? data = default,string message="" )
         {
             IsSuccess = isSuccess;
             Total = total;
             PageSize = pageSize;
-            PageNumber = pageNumner;
+            PageNumber = pageNumber;
             Data = data;
             Meesage = message;
         }
