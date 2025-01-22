@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace DataAccess.Rpos
 {
-    public class SupplierRepo:BaseRepo<Supplier>,SupplierIRepo
+    public class SupplierRepo : BaseRepo<Supplier>, SupplierIRepo
     {
         ApplicationDbContext _context;
         public SupplierRepo(ApplicationDbContext context) : base(context)

@@ -10,10 +10,11 @@ using System.Threading.Tasks;
 
 namespace DataAccess.Rpos
 {
-    public  class StoreRepo : BaseRepo<Store> , StoreIRepo
+    public class StoreRepo : BaseRepo<Store>, StoreIRepo
     {
         ApplicationDbContext _context;
-        public StoreRepo(ApplicationDbContext context) : base(context) {
+        public StoreRepo(ApplicationDbContext context) : base(context)
+        {
             _context = context;
         }
     }

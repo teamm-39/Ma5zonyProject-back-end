@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace DataAccess.Rpos
 {
-    public class ExportRepo : BaseRepo<Export> , ExportIRepo
+    public class ExportRepo : BaseRepo<Export>, ExportIRepo
     {
         ApplicationDbContext _context;
         public ExportRepo(ApplicationDbContext context) : base(context)

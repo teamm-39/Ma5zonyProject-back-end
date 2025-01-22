@@ -12,8 +12,9 @@ namespace DataAccess.Rpos
     public class UserMangeStoreRepo : BaseRepo<UserMangeStore>, UserMangerStoreIRepo
     {
         ApplicationDbContext _context;
-        public UserMangeStoreRepo(ApplicationDbContext context) : base(context) {
+        public UserMangeStoreRepo(ApplicationDbContext context) : base(context)
+        {
             _context = context;
-    }
+        }
     }
 }

@@ -12,9 +12,10 @@ namespace DataAccess.Rpos
     public class ProductImportRepo : BaseRepo<ProductImports>, ProductImportIRepo
     {
         ApplicationDbContext _context;
-        public ProductImportRepo(ApplicationDbContext context) : base(context) {
+        public ProductImportRepo(ApplicationDbContext context) : base(context)
+        {
             _context = context;
-            }
         }
-
     }
+
+}

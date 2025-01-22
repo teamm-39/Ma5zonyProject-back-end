@@ -12,7 +12,7 @@ namespace Utility
         {
             if (data != null)
             {
-                    var skip = pageNum - 1 * pageSize;
+                    var skip = (pageNum - 1) * pageSize;
                     return data.Skip(skip).Take(pageSize);
             }
             return null;
