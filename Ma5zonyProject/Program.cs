@@ -1,5 +1,7 @@
 ﻿
 using DataAccess.Data;
+using DataAccess.IRepos;
+using DataAccess.Rpos;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Models.Models;
@@ -31,8 +33,11 @@ namespace Ma5zonyProject
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
             options.UseSqlServer(builder.Configuration.GetConnectionString("DeafultConnection")));
             //1-Configure Identity User&Roles
+            //
             builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
+            builder.Services.AddScoped<CustomerIRepo, CustomerRepo>();
 
+            //
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
