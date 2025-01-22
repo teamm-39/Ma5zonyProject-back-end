@@ -90,7 +90,7 @@ namespace Ma5zonyProject.Controllers
             }
             return BadRequest(result);
         }
-        [HttpPost("log-out")]
+        [HttpGet("log-out")]
         public async Task<ActionResult> Logout()
         {
             await _signInManager.SignOutAsync();

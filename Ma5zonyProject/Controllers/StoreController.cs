@@ -34,7 +34,7 @@ namespace Ma5zonyProject.Controllers
                 }
             }
             var res = new Result<List<Store>>(isSuccess: false, message: "رقم الصفحه و عدد العناصر يجب ان يكونوا اكبر من الصفر", pageNumber: pageNumber, pageSize: pageSize, data: []);
-            return BadRequest(res);
+            return Ok(res);
         }
         [HttpGet]
         [Route("get-store/{id}")]
@@ -48,8 +48,9 @@ namespace Ma5zonyProject.Controllers
                 result.Data = store;
                 return Ok(result);
             }
+            result.IsSuccess = true;
             result.Meesage = "لم يتم العثور على هذا العنصر";
-            return BadRequest(result);
+            return Ok(result);
         }
         [HttpPost]
         [Route("create")]
@@ -62,7 +63,6 @@ namespace Ma5zonyProject.Controllers
                 _store.Create(newStore);
                 _store.commit();
                 result.IsSuccess = true;
-                result.Data = storeVM;
                 result.Meesage = "تم انشاء المخزن بنجاح";
                 return Ok(result);
             }
@@ -85,12 +85,11 @@ namespace Ma5zonyProject.Controllers
                     _store.Edit(oldStore);
                     _store.commit();
                     result.IsSuccess = true;
-                    result.Data=oldStore;
                     result.Meesage = "تم التعديل بنجاح";
                     return Ok(result);
                 }
                 result.Meesage = "لم يتم العثور على هذا العنصر";
-                return BadRequest(result);
+                return Ok(result);
             }
             return BadRequest();
         }
@@ -102,7 +101,6 @@ namespace Ma5zonyProject.Controllers
             var store=_store.GetOne(e=>e.StoreId == id);
             if (store != null)
             {
-                result.Data=store;
                 _store.Delete(id);
                 _store.commit();
                 result.Meesage = "تم الحذف بنجاح";
@@ -110,7 +108,7 @@ namespace Ma5zonyProject.Controllers
                 return Ok(result);
             }
             result.Meesage = "لم يتم العثور على هذا العنصر";
-            return BadRequest(result);
+            return Ok(result);
         }
     }
 }
