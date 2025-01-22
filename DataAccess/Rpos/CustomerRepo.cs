@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace DataAccess.Rpos
 {
-    public class CustomerRepo<> : BaseRepo<CustomerIRepo> ,  CustomerIRepo 
+    public class CustomerRepo : BaseRepo<Customer>,CustomerIRepo
     {
         ApplicationDbContext _context;
         public CustomerRepo(ApplicationDbContext context) : base(context)
