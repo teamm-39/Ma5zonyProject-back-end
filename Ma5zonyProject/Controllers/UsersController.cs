@@ -37,7 +37,8 @@ namespace Ma5zonyProject.Controllers
         {
             if (_roleManager.Roles.IsNullOrEmpty())
             {
-                await _roleManager.CreateAsync(new("admin"));
+                await _roleManager.CreateAsync(new(roleName: StaticData.admin));
+                await _roleManager.CreateAsync(new(roleName:StaticData.user));
             }
             if (ModelState.IsValid)
             {
@@ -84,7 +85,8 @@ namespace Ma5zonyProject.Controllers
                     result.IsSuccess = true;
                     return Ok(result);
                 }
-                return Ok(result);
+                result.Meesage = "Invalid email or password";
+                return Unauthorized(result);
             }
             return BadRequest(result);
         }
