@@ -66,6 +66,10 @@ namespace DataAccess.Rpos
         {
             _model.Add(item);
         }
+        public void Edit(T entity)
+        {
+            _model.Update(entity);
+        }
         public void commit()
         {
             _context.SaveChanges();

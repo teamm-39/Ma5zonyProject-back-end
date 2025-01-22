@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace Models.ViewModels
 {
-    public class StoreVM
+    public class StoreEditVM
     {
-        [Required]
+        public int StoreId { get; set; }
         [MinLength(3, ErrorMessage = "الاسم يجب أن يحتوي على 3 أحرف على الأقل.")]
         public string Name { get; set; }
         public string Country { get; set; }

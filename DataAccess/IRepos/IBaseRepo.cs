@@ -18,6 +18,7 @@ namespace DataAccess.IRepos
     Expression<Func<T, object>>[]? includes = null,
             Func<IQueryable<T>, IQueryable<T>>? additionalIncludes = null);
         public void Create(T item);
+        void Edit(T entity);
         public bool Delete(int id);
         public void commit();
     }
