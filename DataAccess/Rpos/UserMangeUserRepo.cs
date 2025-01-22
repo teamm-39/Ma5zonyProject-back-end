@@ -9,10 +9,11 @@ using Models.Models;
 
 namespace DataAccess.Rpos
 {
-    public class UserMangeUserRepo : BaseRepo<UserMangeUser> , UserMangerUserIRepo
+    public class UserMangeUserRepo : BaseRepo<UserMangeUser>, UserMangerUserIRepo
     {
         ApplicationDbContext _context;
-        public UserMangerUserRepo(ApplicationDbContext context) : base (context) {
+        public UserMangeUserRepo(ApplicationDbContext context) : base(context)
+        {
             _context = context;
         }
     }

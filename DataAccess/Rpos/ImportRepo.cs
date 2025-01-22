@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace DataAccess.Rpos
 {
-    public class ImportRepo:BaseRepo<Import> , ImportIRepo
+    public class ImportRepo : BaseRepo<Import>, ImportIRepo
     {
         ApplicationDbContext _context;
         public ImportRepo(ApplicationDbContext context) : base(context)

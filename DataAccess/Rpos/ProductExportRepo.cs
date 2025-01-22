@@ -9,11 +9,12 @@ using Models.Models;
 
 namespace DataAccess.Rpos
 {
-    public class ProductExportRepo : BaseRepo<ProductExports> , ProductExportIRepo
+    public class ProductExportRepo : BaseRepo<ProductExports>, ProductExportIRepo
     {
         ApplicationDbContext _context;
-        public ProductExportRepo(ApplicationDbContext context) : base(context) {
+        public ProductExportRepo(ApplicationDbContext context) : base(context)
+        {
             _context = context;
         }
-        } 
     }
+}
