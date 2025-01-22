@@ -36,24 +36,6 @@ namespace Ma5zonyProject.Controllers
             var res = new Result<List<Store>>(isSuccess: false, message: "رقم الصفحه و عدد العناصر يجب ان يكونوا اكبر من الصفر", pageNumber: pageNumber, pageSize: pageSize, data: []);
             return BadRequest(res);
         }
-        [HttpPost]
-        [Route("create")]
-        public IActionResult Create(StoreVM storeVM)
-        {
-            var result = new Result<StoreVM>();
-            if (ModelState.IsValid)
-            {
-                Store newStore = new Store { Name = storeVM.Name, Country = storeVM.Country, City = storeVM.City };
-                _store.Create(newStore);
-                _store.commit();
-                result.IsSuccess = true;
-                result.Data = storeVM;
-                result.Meesage = "تم انشاء المخزن بنجاح";
-                return Ok(result);
-            }
-            result.Data = storeVM;
-            return BadRequest(result);
-        }
         [HttpGet]
         [Route("get-store/{id}")]
         public IActionResult GetOne(int id)
@@ -67,7 +49,68 @@ namespace Ma5zonyProject.Controllers
                 return Ok(result);
             }
             result.Meesage = "لم يتم العثور على هذا العنصر";
-            return Ok(result);
+            return BadRequest(result);
+        }
+        [HttpPost]
+        [Route("create")]
+        public IActionResult Create(StoreCreateVM storeVM)
+        {
+            var result = new Result<StoreCreateVM>();
+            if (ModelState.IsValid)
+            {
+                Store newStore = new Store { Name = storeVM.Name, Country = storeVM.Country, City = storeVM.City };
+                _store.Create(newStore);
+                _store.commit();
+                result.IsSuccess = true;
+                result.Data = storeVM;
+                result.Meesage = "تم انشاء المخزن بنجاح";
+                return Ok(result);
+            }
+            result.Data = storeVM;
+            return BadRequest(result);
+        }
+        [HttpPut]
+        [Route("Edit")]
+        public IActionResult Edit(StoreEditVM store)
+        {
+                var result = new Result<Store>();
+            if (ModelState.IsValid)
+            {
+                var oldStore = _store.GetOne(e => e.StoreId == store.StoreId);
+                if (oldStore != null)
+                {
+                    oldStore.Name= store.Name;
+                    oldStore.Country= store.Country;
+                    oldStore.City= store.City;
+                    _store.Edit(oldStore);
+                    _store.commit();
+                    result.IsSuccess = true;
+                    result.Data=oldStore;
+                    result.Meesage = "تم التعديل بنجاح";
+                    return Ok(result);
+                }
+                result.Meesage = "لم يتم العثور على هذا العنصر";
+                return BadRequest(result);
+            }
+            return BadRequest();
+        }
+        [HttpDelete]
+        [Route("delete/{id}")]
+        public IActionResult Delete(int id)
+        {
+            var result = new Result<Store>();
+            var store=_store.GetOne(e=>e.StoreId == id);
+            if (store != null)
+            {
+                result.Data=store;
+                _store.Delete(id);
+                _store.commit();
+                result.Meesage = "تم الحذف بنجاح";
+                result.IsSuccess=true;
+                return Ok(result);
+            }
+            result.Meesage = "لم يتم العثور على هذا العنصر";
+            return BadRequest(result);
         }
     }
 }
