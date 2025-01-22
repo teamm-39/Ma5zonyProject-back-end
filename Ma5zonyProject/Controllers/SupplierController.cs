@@ -15,3 +15,4 @@ namespace Ma5zonyProject.Controllers
             _supplier = supplier;
         }
     }
+}

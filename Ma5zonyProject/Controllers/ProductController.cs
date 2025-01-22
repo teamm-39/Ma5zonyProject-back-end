@@ -17,3 +17,4 @@ namespace Ma5zonyProject.Controllers
             _product = product;
         }
     }
+}
