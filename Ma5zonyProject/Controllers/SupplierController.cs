@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using DataAccess.IRepos;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Ma5zonyProject.Controllers
@@ -7,5 +8,11 @@ namespace Ma5zonyProject.Controllers
     [ApiController]
     public class SupplierController : ControllerBase
     {
+        private SupplierIRepo _store;
+
+        public SupplierController(SupplierIRepo store)
+        {
+            _store = store;
+        }
     }
 }
