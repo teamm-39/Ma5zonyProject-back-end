@@ -21,23 +21,11 @@ namespace DataAccess.Data
         public DbSet<Supplier> Suppliers { get; set; }
         public DbSet<UserMangeProduct> UserMangeProducts { get; set; }
         public DbSet<UserMangeStore> UserMangeStores { get; set; }
-        public DbSet<UserMangeUser> UserMangeUsers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
 
-            builder.Entity<UserMangeUser>()
-                .HasOne(umu => umu.ApplicationUser) // المدير
-                .WithMany(au => au.ManagedEmployees)
-                .HasForeignKey(umu => umu.ApplicationUserId)
-                .OnDelete(DeleteBehavior.NoAction);
-
-            builder.Entity<UserMangeUser>()
-                .HasOne(umu => umu.Employee) // الموظف
-                .WithMany(au => au.Managers)
-                .HasForeignKey(umu => umu.EmployeeId)
-                .OnDelete(DeleteBehavior.NoAction);
 
 
             builder.Entity<ProductExports>()
@@ -54,9 +42,6 @@ namespace DataAccess.Data
 
             builder.Entity<UserMangeStore>()
                 .HasKey(e => new { e.StoreId, e.ApplicationUserId });
-
-            builder.Entity<UserMangeUser>()
-                .HasKey(e => new { e.ApplicationUserId, e.EmployeeId });
         }
     }
 }

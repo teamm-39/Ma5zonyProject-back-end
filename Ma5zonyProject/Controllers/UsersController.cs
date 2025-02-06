@@ -6,6 +6,7 @@ using Models.Models;
 using Utility;
 using Models.ViewModels;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using Microsoft.EntityFrameworkCore;
 
 namespace Ma5zonyProject.Controllers
 {
@@ -25,12 +26,59 @@ namespace Ma5zonyProject.Controllers
             _roleManager = roleManager;
         }
         [HttpGet]
-        public async Task<ActionResult> GetAll()
+        public async Task<ActionResult> GetAllAdmins(int pageSize = 5, int pageNumber = 1, string? name = null, string? userName = null, int? age = null
+            , string? phone = null, string? address = null)
         {
-            var users = _userManager.Users.ToList();
-            var total = users.Count();
-            var result = new Result<List<ApplicationUser>>(true, total, total, 1, users);
-            return Ok(result);
+            if (pageNumber > 0 && pageSize > 0)
+            {
+                var users = _userManager.Users.AsQueryable();
+                var adminUsers = new List<UserDTO>();
+                
+                if (!string.IsNullOrEmpty(name))
+                {
+                    users = users.Where(e => EF.Functions.Like(e.Name,$"%{name}%"));
+                }
+                if (!string.IsNullOrEmpty(userName))
+                {
+                    users = users.Where(e => EF.Functions.Like(e.UserName, $"%{userName}%"));
+                }
+                if (age.HasValue)
+                {
+                    users = users.Where(e => e.Age == age);
+                }
+                if (!string.IsNullOrEmpty(phone))
+                {
+                    users = users.Where(e => EF.Functions.Like(e.PhoneNumber, $"%{phone}%"));
+                }
+                if (!string.IsNullOrEmpty(address))
+                {
+                    users = users.Where(e => EF.Functions.Like(e.Address, $"%{address}%"));
+                }
+                var usersList = await users.AsNoTracking().ToListAsync();
+                foreach (var user in usersList)
+                {
+                    var role = await _userManager.GetRolesAsync(user);
+                    if (role.Contains(StaticData.admin))
+                    {
+                        var adminUser = new UserDTO()
+                        {
+                            Id = user.Id,
+                            Address = user.Address,
+                            Email = user.Email,
+                            Name = user.Name,
+                            UserName = user.UserName,
+                            ImgUrl = user.ImgUrl,
+                            PhoneNumber = user.PhoneNumber
+                        };
+                        adminUsers.Add(adminUser);
+                    }
+                }
+                var total = adminUsers.Count();
+                var result = new Result<List<UserDTO>>(true, total, pageSize, pageNumber, adminUsers);
+                return Ok(result);
+            }
+            var invalidResult = new Result<List<UserDTO>>(false, 0, pageSize, pageNumber, [],"يجب ان يكون رقم الصفحه وعدد العناصر اكبر من الصفر");
+            return BadRequest(invalidResult);
         }
         [HttpPost("sign-up")]
         public async Task<ActionResult> Register(UserRegisterVM user)
@@ -38,7 +86,7 @@ namespace Ma5zonyProject.Controllers
             if (_roleManager.Roles.IsNullOrEmpty())
             {
                 await _roleManager.CreateAsync(new(roleName: StaticData.admin));
-                await _roleManager.CreateAsync(new(roleName:StaticData.user));
+                await _roleManager.CreateAsync(new(roleName: StaticData.user));
             }
             if (ModelState.IsValid)
             {
@@ -75,18 +123,18 @@ namespace Ma5zonyProject.Controllers
         [HttpPost("sign-in")]
         public async Task<ActionResult> Login(UserLoginVM user)
         {
-            Result<UserLoginVM> result = new(false, data: user);
+            Result<UserLoginVM> result = new(false);
             if (ModelState.IsValid)
             {
                 var applicationUser = await _userManager.FindByEmailAsync(user.Email);
-                if (applicationUser != null&& await _userManager.CheckPasswordAsync(applicationUser, user.Password))
+                if (applicationUser != null && await _userManager.CheckPasswordAsync(applicationUser, user.Password))
                 {
                     await _signInManager.SignInAsync(applicationUser, false);
                     result.IsSuccess = true;
                     return Ok(result);
                 }
                 result.Meesage = "Invalid email or password";
-                return Unauthorized(result);
+                return Ok(result);
             }
             return BadRequest(result);
         }
@@ -94,8 +142,24 @@ namespace Ma5zonyProject.Controllers
         public async Task<ActionResult> Logout()
         {
             await _signInManager.SignOutAsync();
-            var result = new Result<Array>(isSuccess:true);
+            var result = new Result<Array>(isSuccess: true);
             return Ok(result);
+        }
+        [HttpGet("is-loged-in")]
+        public IActionResult Chek()
+        {
+            var result = new Result<bool>();
+            result.IsSuccess = true;
+            if (User.Identity.IsAuthenticated)
+            {
+                result.Data = true;
+                return Ok(result);
+            }
+            else
+            {
+                result.Data = false;
+                return Ok(result);
+            }
         }
     }
 }

@@ -2,13 +2,13 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using Models.Models;
 using Models.ViewModels;
 using Utility;
 
 namespace Ma5zonyProject.Controllers
 {
-    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class StoreController : ControllerBase
@@ -20,13 +20,25 @@ namespace Ma5zonyProject.Controllers
             _store = store;
         }
         [HttpGet]
-        public IActionResult GetAll(int pageSize = 10, int pageNumber = 1)
+        public IActionResult GetAll(int pageSize = 5, int pageNumber = 1,string name="",string country="",string city="")
         {
             if (pageNumber > 0 && pageSize > 0)
             {
                 var data = _store.GetAll();
                 if (data != null)
                 {
+                    if (!string.IsNullOrWhiteSpace(name))
+                    {
+                        data=data.Where(e=>e.Name.ToLower().Contains(name.ToLower()));
+                    }
+                    if (!string.IsNullOrWhiteSpace(country))
+                    {
+                        data=data.Where(e=>e.Country.ToLower().Contains(country.ToLower()));
+                    }
+                    if (!string.IsNullOrWhiteSpace(city))
+                    {
+                        data=data.Where(e=>e.City.ToLower().Contains(city.ToLower()));
+                    }
                     var total = data.Count();
                     var newData = Pagination<Store>.Paginate(data, pageNum: pageNumber, pageSize: pageSize).ToList();
                     var result = new Result<List<Store>>(isSuccess: true, total: total, pageSize: pageSize, pageNumber: pageNumber, data: newData);

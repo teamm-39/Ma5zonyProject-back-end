@@ -46,7 +46,6 @@ namespace Ma5zonyProject
             builder.Services.AddScoped<StoreProductIRepo, StoreProductRepo>();
             builder.Services.AddScoped<UserMangerProductIRepo, UserMangeProductRepo>();
             builder.Services.AddScoped<UserMangerStoreIRepo, UserMangeStoreRepo>();
-            builder.Services.AddScoped<UserMangerUserIRepo, UserMangeUserRepo>();
             //
             var app = builder.Build();
 
