@@ -125,7 +125,7 @@ namespace Ma5zonyProject.Controllers
             {
                 if (img != null)
                 {
-                    var folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/profilePicture/admins");
+                    var folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/profilePicture");
                     await FileHelper.SaveFileAsync(img, folder, imgName);
                 }
                 res.IsSuccess = true;
