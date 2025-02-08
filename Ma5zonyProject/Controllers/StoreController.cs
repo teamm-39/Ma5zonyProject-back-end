@@ -20,34 +20,30 @@ namespace Ma5zonyProject.Controllers
             _store = store;
         }
         [HttpGet]
-        public IActionResult GetAll(int pageSize = 5, int pageNumber = 1,string name="",string country="",string city="")
+        public IActionResult GetAll(int pageSize = 5, int pageNumber = 1, string? name = null, string? country = null, string? city = null)
         {
-            if (pageNumber > 0 && pageSize > 0)
+            if (pageNumber <= 0 || pageSize <= 0)
             {
-                var data = _store.GetAll();
-                if (data != null)
-                {
-                    if (!string.IsNullOrWhiteSpace(name))
-                    {
-                        data=data.Where(e=>e.Name.ToLower().Contains(name.ToLower()));
-                    }
-                    if (!string.IsNullOrWhiteSpace(country))
-                    {
-                        data=data.Where(e=>e.Country.ToLower().Contains(country.ToLower()));
-                    }
-                    if (!string.IsNullOrWhiteSpace(city))
-                    {
-                        data=data.Where(e=>e.City.ToLower().Contains(city.ToLower()));
-                    }
-                    var total = data.Count();
-                    var newData = Pagination<Store>.Paginate(data, pageNum: pageNumber, pageSize: pageSize).ToList();
-                    var result = new Result<List<Store>>(isSuccess: true, total: total, pageSize: pageSize, pageNumber: pageNumber, data: newData);
-                    return Ok(result);
-                }
+                var res = new Result<List<Store>>(isSuccess: false, message: "رقم الصفحة وعدد العناصر يجب أن يكونا أكبر من الصفر",
+                                                  pageNumber: pageNumber, pageSize: pageSize, data: []);
+                return BadRequest(res);
             }
-            var res = new Result<List<Store>>(isSuccess: false, message: "رقم الصفحه و عدد العناصر يجب ان يكونوا اكبر من الصفر", pageNumber: pageNumber, pageSize: pageSize, data: []);
-            return Ok(res);
+
+            // إنشاء Dictionary لتخزين الفلاتر
+            var filters = new Dictionary<string, object>();
+            if (!string.IsNullOrWhiteSpace(name)) filters.Add("Name", name);
+            if (!string.IsNullOrWhiteSpace(country)) filters.Add("Country", country);
+            if (!string.IsNullOrWhiteSpace(city)) filters.Add("City", city);
+
+            // استدعاء الفلترة والباجينيشن من الـ Repo مباشرة
+            var data = _store.GetAll(pageSize: pageSize, pageNumber: pageNumber, filters: filters);
+
+            var total = data.Count();
+            var result = new Result<List<Store>>(isSuccess: true, total: total, pageSize: pageSize, pageNumber: pageNumber, data: data.ToList());
+
+            return Ok(result);
         }
+
         [HttpGet]
         [Route("get-store/{id}")]
         public IActionResult GetOne(int id)

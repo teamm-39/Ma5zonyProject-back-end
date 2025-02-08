@@ -32,7 +32,7 @@ namespace Ma5zonyProject.Controllers
             if (pageNumber > 0 && pageSize > 0)
             {
                 var users = _userManager.Users.AsQueryable();
-                var adminUsers = new List<UserDTO>();
+                var adminUsers = new List<AdminsDTO>();
                 
                 if (!string.IsNullOrEmpty(name))
                 {
@@ -60,7 +60,7 @@ namespace Ma5zonyProject.Controllers
                     var role = await _userManager.GetRolesAsync(user);
                     if (role.Contains(StaticData.admin))
                     {
-                        var adminUser = new UserDTO()
+                        var adminUser = new AdminsDTO()
                         {
                             Id = user.Id,
                             Address = user.Address,
@@ -74,10 +74,10 @@ namespace Ma5zonyProject.Controllers
                     }
                 }
                 var total = adminUsers.Count();
-                var result = new Result<List<UserDTO>>(true, total, pageSize, pageNumber, adminUsers);
+                var result = new Result<List<AdminsDTO>>(true, total, pageSize, pageNumber, adminUsers);
                 return Ok(result);
             }
-            var invalidResult = new Result<List<UserDTO>>(false, 0, pageSize, pageNumber, [],"يجب ان يكون رقم الصفحه وعدد العناصر اكبر من الصفر");
+            var invalidResult = new Result<List<AdminsDTO>>(false, 0, pageSize, pageNumber, [],"يجب ان يكون رقم الصفحه وعدد العناصر اكبر من الصفر");
             return BadRequest(invalidResult);
         }
         [HttpPost("sign-up")]

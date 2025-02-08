@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using DataAccess.IRepos;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,67 +13,67 @@ namespace Ma5zonyProject.Controllers
     [ApiController]
     public class AdminController : ControllerBase
     {
+        private readonly ApplicationUserIRepo _users;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
 
-        public AdminController(UserManager<ApplicationUser> userManager)
+        public AdminController(ApplicationUserIRepo users,
+                        UserManager<ApplicationUser> userManager,
+                        RoleManager<IdentityRole> roleManager)
         {
+            _users = users;
             _userManager = userManager;
+            _roleManager = roleManager;
         }
 
         [HttpGet]
-        public async Task<ActionResult> GetAllAdmins(int pageSize = 5, int pageNumber = 1, string? name = null, string? userName = null, int? age = null
-    , string? phone = null, string? address = null)
+        public async Task<ActionResult> GetAllAdmins(
+            int pageSize = 5,
+            int pageNumber = 1
+            , string? name = null
+            , string? userName = null
+            , int? age = null
+            , string? phone = null
+            , string? address = null)
         {
-            if (pageNumber > 0 && pageSize > 0)
+            var res = new Result<List<AdminsDTO>>(isSuccess: false, message: "",
+                                              pageNumber: pageNumber, pageSize: pageSize, data: []);
+            if (pageSize < 1 || pageNumber < 1)
             {
-                var users = _userManager.Users.AsQueryable();
-                var adminUsers = new List<UserDTO>();
-
-                if (!string.IsNullOrEmpty(name))
-                {
-                    users = users.Where(e => EF.Functions.Like(e.Name, $"%{name}%"));
-                }
-                if (!string.IsNullOrEmpty(userName))
-                {
-                    users = users.Where(e => EF.Functions.Like(e.UserName, $"%{userName}%"));
-                }
-                if (age.HasValue)
-                {
-                    users = users.Where(e => e.Age == age);
-                }
-                if (!string.IsNullOrEmpty(phone))
-                {
-                    users = users.Where(e => EF.Functions.Like(e.PhoneNumber, $"%{phone}%"));
-                }
-                if (!string.IsNullOrEmpty(address))
-                {
-                    users = users.Where(e => EF.Functions.Like(e.Address, $"%{address}%"));
-                }
-                var usersList = await users.AsNoTracking().ToListAsync();
-                foreach (var user in usersList)
-                {
-                    var role = await _userManager.GetRolesAsync(user);
-                    if (role.Contains(StaticData.admin))
-                    {
-                        var adminUser = new UserDTO()
-                        {
-                            Id = user.Id,
-                            Address = user.Address,
-                            Email = user.Email,
-                            Name = user.Name,
-                            UserName = user.UserName,
-                            ImgUrl = user.ImgUrl,
-                            PhoneNumber = user.PhoneNumber
-                        };
-                        adminUsers.Add(adminUser);
-                    }
-                }
-                var total = adminUsers.Count();
-                var result = new Result<List<UserDTO>>(true, total, pageSize, pageNumber, adminUsers);
-                return Ok(result);
+                res.Meesage = "رقم الصفحة وعدد العناصر يجب أن يكونا أكبر";
+                return BadRequest(res);
             }
-            var invalidResult = new Result<List<UserDTO>>(false, 0, pageSize, pageNumber, [], "يجب ان يكون رقم الصفحه وعدد العناصر اكبر من الصفر");
-            return BadRequest(invalidResult);
+            var adminUser = await _userManager.GetUsersInRoleAsync("Admin");
+            var adminIds = adminUser.Select(u => u.Id).ToList();
+            //fiteration
+            var filter = new Dictionary<string, object>();
+            if (!string.IsNullOrEmpty(name)) filter.Add("Name", name);
+            if (!string.IsNullOrEmpty(userName)) filter.Add("UserName", userName);
+            if (age.HasValue) filter.Add("Age", age);
+            if (!string.IsNullOrEmpty(phone)) filter.Add("PhoneNumber", phone);
+            if (!string.IsNullOrEmpty(address)) filter.Add("Address", address);
+            //data
+            var adminUsers = _users.GetAll(
+                                            pageNumber: pageNumber,
+                                            pageSize: pageSize,
+                                            filters: filter,
+                                            expression: e => adminIds.Contains(e.Id)
+                                        )?.ToList() ?? new List<ApplicationUser>();
+            res.IsSuccess = true;
+
+            res.Data = adminUsers.Select(user => new AdminsDTO
+            {
+                Id = user.Id,
+                Address = user.Address,
+                Age = user.Age,
+                PhoneNumber = user.PhoneNumber,
+                Email = user.Email,
+                Name = user.Name,
+                UserName = user.UserName,
+                ImgUrl = user.ImgUrl
+            }).ToList();
+
+            return Ok(res);
         }
     }
 }

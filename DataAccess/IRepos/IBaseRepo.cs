@@ -9,10 +9,13 @@ namespace DataAccess.IRepos
 {
     public interface IBaseRepo<T> where T : class
     {
-        IEnumerable<T> GetAll(Expression<Func<T, object>>[]? includes = null,
-            Expression<Func<T, bool>>? expression = null,
-            Func<IQueryable<T>, IQueryable<T>>? additionalIncludes = null
-            );
+        public IEnumerable<T> GetAll(
+    Expression<Func<T, object>>[]? includes = null,
+    Expression<Func<T, bool>>? expression = null,
+    Func<IQueryable<T>, IQueryable<T>>? additionalIncludes = null,
+    int pageSize = 10,
+    int pageNumber = 1,
+    Dictionary<string, object>? filters = null);
         public T? GetOne(
     Expression<Func<T, bool>> expression,
     Expression<Func<T, object>>[]? includes = null,
