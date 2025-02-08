@@ -75,5 +75,65 @@ namespace Ma5zonyProject.Controllers
 
             return Ok(res);
         }
+        [HttpPost("create")]
+        [Consumes("multipart/form-data")]
+        public async Task<ActionResult> CreateAdmin([FromForm] AdminDTO admin, IFormFile? img)
+        {
+            var res = new Result<AdminDTO>();
+            if (!ModelState.IsValid)
+            {
+                res.Meesage = "يوجد خطأ فى البيانات التى تم ارسالها";
+                return BadRequest(res);
+            }
+            var existingEmail = await _userManager.FindByEmailAsync(admin.Email);
+            if (existingEmail != null)
+            {
+                res.Meesage = "هذا البريد الإلكتروني مستخدم بالفعل.";
+                return BadRequest(res);
+            }
+            var existingUserName = await _userManager.FindByNameAsync(admin.UserName);
+            if (existingUserName != null)
+            {
+                res.Meesage = "اسم المستخدم مستخدم بالفعل.";
+                return BadRequest(res);
+            }
+            if (img != null)
+            {
+                // السماح فقط بامتدادات الصور
+                var allowedExtensions = new HashSet<string> { ".jpg", ".jpeg", ".png", ".bmp" };
+                var imgExtension = Path.GetExtension(img.FileName).ToLower();
+
+                if (!allowedExtensions.Contains(imgExtension))
+                {
+                    res.Meesage = "يُسمح فقط بتحميل صور فقط";
+                    return BadRequest(res);
+                }
+            }
+            string? imgName = img != null ? Guid.NewGuid().ToString() + Path.GetExtension(img.FileName) : null; 
+            ApplicationUser user = new()
+            {
+                Name = admin.Name,
+                Email = admin.Email,
+                Age = admin.Age,
+                PhoneNumber = admin.PhoneNumber,
+                Address = admin.Address,
+                ImgUrl = imgName,
+                UserName = admin.UserName,
+            };
+            var createAdmin = await _userManager.CreateAsync(user, admin.Password);
+            if (createAdmin.Succeeded)
+            {
+                if (img != null)
+                {
+                    var folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/profilePicture/admins");
+                    await FileHelper.SaveFileAsync(img, folder, imgName);
+                }
+                res.IsSuccess = true;
+                await _userManager.AddToRoleAsync(user, StaticData.admin);
+                return Ok(res);
+            }
+            res.Meesage = string.Join(" | ", createAdmin.Errors.Select(e => e.Description));
+            return BadRequest(res);
+        }
     }
 }

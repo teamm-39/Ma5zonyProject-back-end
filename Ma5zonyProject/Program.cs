@@ -47,6 +47,14 @@ namespace Ma5zonyProject
             builder.Services.AddScoped<UserMangerProductIRepo, UserMangeProductRepo>();
             builder.Services.AddScoped<UserMangerStoreIRepo, UserMangeStoreRepo>();
             builder.Services.AddScoped<ApplicationUserIRepo, ApplicationUserRepo>();
+            builder.Services.Configure<IdentityOptions>(options =>
+            {
+                options.Password.RequireDigit = true;       // لازم يكون فيه رقم
+                options.Password.RequiredLength = 6;        // الحد الأدنى للطول (غيّره حسب الحاجة)
+                options.Password.RequireLowercase = true;  // لا يحتاج حروف صغيرة
+                options.Password.RequireUppercase = true;  // لا يحتاج حروف كبيرة
+                options.Password.RequireNonAlphanumeric = false; // لا يحتاج رموز خاصة
+            });
             //
             var app = builder.Build();
 
