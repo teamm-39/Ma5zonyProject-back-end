@@ -18,7 +18,7 @@ namespace Models.ViewModels
         public string Email { get; set; }
         public string? PhoneNumber { get; set; }
         public string? ImgUrl { get; set; }
-        public string Address { get; set; }
+        public string? Address { get; set; }
         [DataType(DataType.Password,ErrorMessage ="كلمة المرور يجب ان تتكون من حرف وصغير وحرف كبير وطول كلمة المرور لا يقل عن 6 احرف")]
         public string? Password { get; set; }
         [DataType(DataType.Password)]
