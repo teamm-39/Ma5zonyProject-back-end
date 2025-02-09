@@ -4,12 +4,13 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
+using Utility;
 
 namespace DataAccess.IRepos
 {
     public interface IBaseRepo<T> where T : class
     {
-        public IEnumerable<T> GetAll(
+        public Result<IEnumerable<T>> GetAll(
     Expression<Func<T, object>>[]? includes = null,
     Expression<Func<T, bool>>? expression = null,
     Func<IQueryable<T>, IQueryable<T>>? additionalIncludes = null,

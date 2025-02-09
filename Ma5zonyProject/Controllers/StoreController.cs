@@ -38,8 +38,8 @@ namespace Ma5zonyProject.Controllers
             // استدعاء الفلترة والباجينيشن من الـ Repo مباشرة
             var data = _store.GetAll(pageSize: pageSize, pageNumber: pageNumber, filters: filters);
 
-            var total = data.Count();
-            var result = new Result<List<Store>>(isSuccess: true, total: total, pageSize: pageSize, pageNumber: pageNumber, data: data.ToList());
+            var total = data.Total;
+            var result = new Result<List<Store>>(isSuccess: true, total: total, pageSize: pageSize, pageNumber: pageNumber, data: data.Data?.ToList());
 
             return Ok(result);
         }

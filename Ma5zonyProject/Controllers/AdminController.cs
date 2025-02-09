@@ -58,10 +58,10 @@ namespace Ma5zonyProject.Controllers
                                             pageSize: pageSize,
                                             filters: filter,
                                             expression: e => adminIds.Contains(e.Id)
-                                        )?.ToList() ?? new List<ApplicationUser>();
+                                        );
             res.IsSuccess = true;
 
-            res.Data = adminUsers.Select(user => new AdminsDTO
+            res.Data = adminUsers.Data?.Select(user => new AdminsDTO
             {
                 Id = user.Id,
                 Address = user.Address,
@@ -72,7 +72,7 @@ namespace Ma5zonyProject.Controllers
                 UserName = user.UserName,
                 ImgUrl = user.ImgUrl
             }).ToList();
-
+            res.Total = adminUsers.Total;
             return Ok(res);
         }
         [HttpPost("create")]

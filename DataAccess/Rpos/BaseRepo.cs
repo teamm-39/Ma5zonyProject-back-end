@@ -8,6 +8,7 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using DataAccess.Data;
+using Utility;
 namespace DataAccess.Rpos
 {
     public class BaseRepo<T> : IBaseRepo<T> where T : class
@@ -19,7 +20,7 @@ namespace DataAccess.Rpos
             _context = context;
             _model = _context.Set<T>();
         }
-        public IEnumerable<T> GetAll(
+        public Result<IEnumerable<T>> GetAll(
      Expression<Func<T, object>>[]? includes = null,
      Expression<Func<T, bool>>? expression = null,
      Func<IQueryable<T>, IQueryable<T>>? additionalIncludes = null,
@@ -27,6 +28,7 @@ namespace DataAccess.Rpos
      int pageNumber = 1,
      Dictionary<string, object>? filters = null)
         {
+            var res = new Result<IEnumerable<T>>();
             var query = _model.AsQueryable();
 
             // إضافة Include للعلاقات
@@ -114,9 +116,10 @@ namespace DataAccess.Rpos
                     }
                 }
             }
-
+            res.Total = query.Count();
+            res.Data = query.Skip((pageNumber - 1) * pageSize).Take(pageSize);
             // تطبيق الـ Pagination
-            return query.Skip((pageNumber - 1) * pageSize).Take(pageSize);
+            return res ;
         }
 
         public T? GetOne(Expression<Func<T, bool>> expression, Expression<Func<T, object>>[]? includes = null
