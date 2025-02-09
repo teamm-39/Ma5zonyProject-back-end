@@ -135,8 +135,8 @@ namespace Ma5zonyProject.Controllers
             res.Meesage = string.Join(" | ", createAdmin.Errors.Select(e => e.Description));
             return BadRequest(res);
         }
-        [HttpGet("details")]
-        public async Task<ActionResult> GetOne(string? id)
+        [HttpGet("details/{id}")]
+        public async Task<ActionResult> GetOne(string id)
         {
             var res = new Result<AdminDTO>();
             if (string.IsNullOrEmpty(id))
@@ -253,6 +253,34 @@ namespace Ma5zonyProject.Controllers
             res.IsSuccess=true;
             return Ok(res);
         }
-
+        [HttpDelete("delete/{id}")]
+        public async Task<ActionResult> Delete([FromRoute ]string id)
+        {
+            var res=new Result<AdminDTO>();
+            if (string.IsNullOrEmpty(id))
+            {
+                res.Meesage = "لم يتم ارسال المعرف الشخصى";
+                return BadRequest(res);
+            }
+            var getAdmin=await _userManager.FindByIdAsync(id);
+            if(getAdmin == null)
+            {
+                res.Meesage = "لم يتم العثور على الادمن";
+                return BadRequest(res);
+            }
+            var deleteAdmin=await _userManager.DeleteAsync(getAdmin);
+            if (!deleteAdmin.Succeeded)
+            {
+                res.Meesage = "حدث خطأ اثناء الحذف";
+                return BadRequest(res);
+            }
+            var folderPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/profilePicture");
+            if (!string.IsNullOrEmpty(getAdmin.ImgUrl))
+            {
+                FileHelper.DeleteFile(folderPath, getAdmin.ImgUrl);
+            }
+            res.IsSuccess = true;
+            return Ok(res);
+        }
     }
 }

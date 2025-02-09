@@ -9,12 +9,6 @@ namespace Utility
 {
     public static class FileHelper
     {
-        /// <summary>
-        /// حفظ الصورة في السيرفر
-        /// </summary>
-        /// <param name="img">الملف المرفوع</param>
-        /// <param name="folderPath">المسار الذي سيتم حفظ الملف فيه</param>
-        /// <param name="fileName">اسم الملف النهائي</param>
         public static async Task SaveFileAsync(IFormFile img, string folderPath, string fileName)
         {
             if (!Directory.Exists(folderPath))
@@ -27,6 +21,14 @@ namespace Utility
             using (var stream = new FileStream(fullPath, FileMode.Create))
             {
                 await img.CopyToAsync(stream);
+            }
+        }
+        public static void DeleteFile(string folderPath,string imgName)
+        {
+            var filePath = Path.Combine(folderPath, imgName);
+            if (System.IO.File.Exists(filePath))
+            {
+                System.IO.File.Delete(filePath);
             }
         }
     }
