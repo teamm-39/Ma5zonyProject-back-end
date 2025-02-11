@@ -12,6 +12,7 @@ namespace Models.ViewModels
     {
         public string? Id { get; set; }
         public string Name { get; set; }
+        [Required]
         public int Age { get; set; }
         public string UserName { get; set; }
         [DataType(DataType.EmailAddress,ErrorMessage ="البريد الالكترونى غير صحيح")]

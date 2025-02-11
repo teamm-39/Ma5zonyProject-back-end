@@ -70,7 +70,7 @@ namespace Ma5zonyProject.Controllers
                 Email = user.Email,
                 Name = user.Name,
                 UserName = user.UserName,
-                ImgUrl = user.ImgUrl
+                ImgUrl = user.ImgUrl,
             }).ToList();
             res.Total = adminUsers.Total;
             return Ok(res);
@@ -95,6 +95,11 @@ namespace Ma5zonyProject.Controllers
             if (existingUserName != null)
             {
                 res.Meesage = "اسم المستخدم مستخدم بالفعل.";
+                return BadRequest(res);
+            }
+            if (admin.Age <= 0)
+            {
+                res.Meesage = "يرجى ادخال العمر بشكل صحيح";
                 return BadRequest(res);
             }
             if (img != null)
@@ -147,7 +152,7 @@ namespace Ma5zonyProject.Controllers
             var getAdmin = await _userManager.FindByIdAsync(id);
             if (getAdmin == null || !await _userManager.IsInRoleAsync(getAdmin, StaticData.admin))
             {
-                res.Meesage = "لم يتم العثور على هذا الادمن";
+                res.Meesage = "لم يتم العثور على هذا المالك";
                 return BadRequest(res);
             }
             AdminDTO admin = new AdminDTO
@@ -183,7 +188,7 @@ namespace Ma5zonyProject.Controllers
             var admin = await _userManager.FindByIdAsync(newAdmin.Id);
             if (admin == null)
             {
-                res.Meesage = "لم يتم العثور على هذا الادمن";
+                res.Meesage = "لم يتم العثور على هذا المالك";
                 return BadRequest(res);
             }
             if (admin.Email != newAdmin.Email)
@@ -221,6 +226,7 @@ namespace Ma5zonyProject.Controllers
                     return BadRequest(res);
                 }
             }
+            var folderPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/profilePicture");
             if (img != null && img.Length > 0)
             {
                 var allowedExtensions = new HashSet<string> { ".jpg", ".jpeg", ".png", ".bmp" };
@@ -231,15 +237,10 @@ namespace Ma5zonyProject.Controllers
                     res.Meesage = "يُسمح فقط بتحميل الصور بامتدادات: JPG, JPEG, PNG, BMP.";
                     return BadRequest(res);
                 }
-                var folderPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/profilePicture");
                 var imgEx = Path.GetExtension(img.FileName);
                 if (!string.IsNullOrEmpty(admin.ImgUrl))
                 {
-                    var oldPath = Path.Combine(folderPath, admin.ImgUrl);
-                    if (System.IO.File.Exists(oldPath))
-                    {
-                        System.IO.File.Delete(oldPath);
-                    }
+                    FileHelper.DeleteFile(folderPath, admin.ImgUrl);
                 }
                 admin.ImgUrl = Guid.NewGuid().ToString() + imgEx;
                 await FileHelper.SaveFileAsync(img, folderPath, admin.ImgUrl);
@@ -250,25 +251,25 @@ namespace Ma5zonyProject.Controllers
                 res.Meesage = "حدث خطأ اثناء تحديث الادمن";
                 return BadRequest(res);
             }
-            res.IsSuccess=true;
+            res.IsSuccess = true;
             return Ok(res);
         }
         [HttpDelete("delete/{id}")]
-        public async Task<ActionResult> Delete([FromRoute ]string id)
+        public async Task<ActionResult> Delete([FromRoute] string id)
         {
-            var res=new Result<AdminDTO>();
+            var res = new Result<AdminDTO>();
             if (string.IsNullOrEmpty(id))
             {
                 res.Meesage = "لم يتم ارسال المعرف الشخصى";
                 return BadRequest(res);
             }
-            var getAdmin=await _userManager.FindByIdAsync(id);
-            if(getAdmin == null)
+            var getAdmin = await _userManager.FindByIdAsync(id);
+            if (getAdmin == null)
             {
                 res.Meesage = "لم يتم العثور على الادمن";
                 return BadRequest(res);
             }
-            var deleteAdmin=await _userManager.DeleteAsync(getAdmin);
+            var deleteAdmin = await _userManager.DeleteAsync(getAdmin);
             if (!deleteAdmin.Succeeded)
             {
                 res.Meesage = "حدث خطأ اثناء الحذف";
