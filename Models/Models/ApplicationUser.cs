@@ -13,6 +13,7 @@ namespace Models.Models
         public int Age { get; set; }
         public string? ImgUrl { get; set; }
         public string? Address { get; set; }
+        public bool IsDeleted { get; set; }
         public ICollection<UserMangeProduct> UserMangeProducts { get; set; }
         public ICollection<Export> Exports { get; set; }
         public ICollection<Import> Imports { get; set; }

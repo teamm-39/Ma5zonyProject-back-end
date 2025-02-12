@@ -57,7 +57,7 @@ namespace Ma5zonyProject.Controllers
                                             pageNumber: pageNumber,
                                             pageSize: pageSize,
                                             filters: filter,
-                                            expression: e => adminIds.Contains(e.Id)
+                                            expression: e => adminIds.Contains(e.Id) && e.IsDeleted == false
                                         );
             res.IsSuccess = true;
 
@@ -150,7 +150,7 @@ namespace Ma5zonyProject.Controllers
                 return BadRequest(res);
             }
             var getAdmin = await _userManager.FindByIdAsync(id);
-            if (getAdmin == null || !await _userManager.IsInRoleAsync(getAdmin, StaticData.admin))
+            if (getAdmin == null || !await _userManager.IsInRoleAsync(getAdmin, StaticData.admin)||getAdmin.IsDeleted==true)
             {
                 res.Meesage = "لم يتم العثور على هذا المالك";
                 return BadRequest(res);
@@ -186,7 +186,7 @@ namespace Ma5zonyProject.Controllers
                 return BadRequest(res);
             }
             var admin = await _userManager.FindByIdAsync(newAdmin.Id);
-            if (admin == null)
+            if (admin == null || !await _userManager.IsInRoleAsync(admin,StaticData.admin) || admin.IsDeleted==true)
             {
                 res.Meesage = "لم يتم العثور على هذا المالك";
                 return BadRequest(res);
@@ -264,21 +264,17 @@ namespace Ma5zonyProject.Controllers
                 return BadRequest(res);
             }
             var getAdmin = await _userManager.FindByIdAsync(id);
-            if (getAdmin == null)
+            if (getAdmin == null || !await _userManager.IsInRoleAsync(getAdmin,StaticData.admin) || getAdmin.IsDeleted==true)
             {
                 res.Meesage = "لم يتم العثور على الادمن";
                 return BadRequest(res);
             }
-            var deleteAdmin = await _userManager.DeleteAsync(getAdmin);
+            getAdmin.IsDeleted = true;
+            var deleteAdmin = await _userManager.UpdateAsync(getAdmin);
             if (!deleteAdmin.Succeeded)
             {
                 res.Meesage = "حدث خطأ اثناء الحذف";
                 return BadRequest(res);
-            }
-            var folderPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/profilePicture");
-            if (!string.IsNullOrEmpty(getAdmin.ImgUrl))
-            {
-                FileHelper.DeleteFile(folderPath, getAdmin.ImgUrl);
             }
             res.IsSuccess = true;
             return Ok(res);
