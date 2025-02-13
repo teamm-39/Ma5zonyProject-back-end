@@ -33,10 +33,10 @@ namespace Ma5zonyProject.Controllers
             {
                 var users = _userManager.Users.AsQueryable();
                 var adminUsers = new List<AdminsDTO>();
-                
+
                 if (!string.IsNullOrEmpty(name))
                 {
-                    users = users.Where(e => EF.Functions.Like(e.Name,$"%{name}%"));
+                    users = users.Where(e => EF.Functions.Like(e.Name, $"%{name}%"));
                 }
                 if (!string.IsNullOrEmpty(userName))
                 {
@@ -77,17 +77,12 @@ namespace Ma5zonyProject.Controllers
                 var result = new Result<List<AdminsDTO>>(true, total, pageSize, pageNumber, adminUsers);
                 return Ok(result);
             }
-            var invalidResult = new Result<List<AdminsDTO>>(false, 0, pageSize, pageNumber, [],"يجب ان يكون رقم الصفحه وعدد العناصر اكبر من الصفر");
+            var invalidResult = new Result<List<AdminsDTO>>(false, 0, pageSize, pageNumber, [], "يجب ان يكون رقم الصفحه وعدد العناصر اكبر من الصفر");
             return BadRequest(invalidResult);
         }
         [HttpPost("sign-up")]
         public async Task<ActionResult> Register(UserRegisterVM user)
         {
-            if (_roleManager.Roles.IsNullOrEmpty())
-            {
-                await _roleManager.CreateAsync(new(roleName: StaticData.admin));
-                await _roleManager.CreateAsync(new(roleName: StaticData.user));
-            }
             if (ModelState.IsValid)
             {
                 ApplicationUser newUser = new()

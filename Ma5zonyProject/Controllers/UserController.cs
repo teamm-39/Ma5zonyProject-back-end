@@ -1,23 +1,22 @@
-﻿using DataAccess.IRepos;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using Utility;
+using Microsoft.AspNetCore.Identity;
 using Models.Models;
 using Models.ViewModels;
-using Utility;
-
+using DataAccess.IRepos;
+using Microsoft.EntityFrameworkCore;
 namespace Ma5zonyProject.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class AdminController : ControllerBase
+    public class UserController : ControllerBase
     {
         private readonly ApplicationUserIRepo _users;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
 
-        public AdminController(ApplicationUserIRepo users,
+        public UserController(ApplicationUserIRepo users,
                         UserManager<ApplicationUser> userManager,
                         RoleManager<IdentityRole> roleManager)
         {
@@ -27,7 +26,7 @@ namespace Ma5zonyProject.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult> GetAllAdmins(
+        public async Task<ActionResult> GetAllUsers(
             int pageSize = 5,
             int pageNumber = 1
             , string? name = null
@@ -36,15 +35,15 @@ namespace Ma5zonyProject.Controllers
             , string? phone = null
             , string? address = null)
         {
-            var res = new Result<List<AdminsDTO>>(isSuccess: false, message: "",
+            var res = new Result<List<UsersDTO>>(isSuccess: false, message: "",
                                               pageNumber: pageNumber, pageSize: pageSize, data: []);
             if (pageSize < 1 || pageNumber < 1)
             {
                 res.Meesage = "رقم الصفحة وعدد العناصر يجب أن يكونا أكبر";
                 return BadRequest(res);
             }
-            var adminUser = await _userManager.GetUsersInRoleAsync("Admin");
-            var adminIds = adminUser.Select(u => u.Id).ToList();
+            var user = await _userManager.GetUsersInRoleAsync("user");
+            var usersIds = user.Select(u => u.Id).ToList();
             //fiteration
             var filter = new Dictionary<string, object>();
             if (!string.IsNullOrEmpty(name)) filter.Add("Name", name);
@@ -53,15 +52,15 @@ namespace Ma5zonyProject.Controllers
             if (!string.IsNullOrEmpty(phone)) filter.Add("PhoneNumber", phone);
             if (!string.IsNullOrEmpty(address)) filter.Add("Address", address);
             //data
-            var adminUsers = _users.GetAll(
+            var users = _users.GetAll(
                                             pageNumber: pageNumber,
                                             pageSize: pageSize,
                                             filters: filter,
-                                            expression: e => adminIds.Contains(e.Id) && e.IsDeleted == false
+                                            expression: e => usersIds.Contains(e.Id) && e.IsDeleted == false
                                         );
             res.IsSuccess = true;
 
-            res.Data = adminUsers.Data?.Select(user => new AdminsDTO
+            res.Data = users.Data?.Select(user => new UsersDTO
             {
                 Id = user.Id,
                 Address = user.Address,
@@ -72,12 +71,12 @@ namespace Ma5zonyProject.Controllers
                 UserName = user.UserName,
                 ImgUrl = user.ImgUrl,
             }).ToList();
-            res.Total = adminUsers.Total;
+            res.Total = users.Total;
             return Ok(res);
         }
         [HttpPost("create")]
         [Consumes("multipart/form-data")]
-        public async Task<ActionResult> CreateAdmin([FromForm] UserDTO user, IFormFile? img)
+        public async Task<ActionResult> CreateUser([FromForm] UserDTO userDTO, IFormFile? img)
         {
             var res = new Result<UserDTO>();
             if (!ModelState.IsValid)
@@ -98,19 +97,19 @@ namespace Ma5zonyProject.Controllers
             {
                 await _roleManager.CreateAsync(new IdentityRole(StaticData.user));
             }
-            var existingEmail = await _userManager.FindByEmailAsync(user.Email);
+            var existingEmail = await _userManager.FindByEmailAsync(userDTO.Email);
             if (existingEmail != null)
             {
                 res.Meesage = "هذا البريد الإلكتروني مستخدم بالفعل.";
                 return BadRequest(res);
             }
-            var existingUserName = await _userManager.FindByNameAsync(user.UserName);
+            var existingUserName = await _userManager.FindByNameAsync(userDTO.UserName);
             if (existingUserName != null)
             {
                 res.Meesage = "اسم المستخدم مستخدم بالفعل.";
                 return BadRequest(res);
             }
-            if (user.Age <= 0)
+            if (userDTO.Age <= 0)
             {
                 res.Meesage = "يرجى ادخال العمر بشكل صحيح";
                 return BadRequest(res);
@@ -128,17 +127,17 @@ namespace Ma5zonyProject.Controllers
                 }
             }
             string? imgName = img != null ? Guid.NewGuid().ToString() + Path.GetExtension(img.FileName) : null;
-            ApplicationUser createdUser = new()
+            ApplicationUser user = new()
             {
-                Name = user.Name,
-                Email = user.Email,
-                Age = user.Age,
-                PhoneNumber = user.PhoneNumber,
-                Address = user.Address,
+                Name = userDTO.Name,
+                Email = userDTO.Email,
+                Age = userDTO.Age,
+                PhoneNumber = userDTO.PhoneNumber,
+                Address = userDTO.Address,
                 ImgUrl = imgName,
-                UserName = user.UserName,
+                UserName = userDTO.UserName,
             };
-            var createUser = await _userManager.CreateAsync(createdUser, user.Password);
+            var createUser = await _userManager.CreateAsync(user, userDTO.Password);
             if (createUser.Succeeded)
             {
                 if (img != null)
@@ -147,7 +146,7 @@ namespace Ma5zonyProject.Controllers
                     await FileHelper.SaveFileAsync(img, folder, imgName);
                 }
                 res.IsSuccess = true;
-                await _userManager.AddToRoleAsync(createdUser, StaticData.user);
+                await _userManager.AddToRoleAsync(user, StaticData.user);
                 return Ok(res);
             }
             res.Meesage = string.Join(" | ", createUser.Errors.Select(e => e.Description));
@@ -163,9 +162,9 @@ namespace Ma5zonyProject.Controllers
                 return BadRequest(res);
             }
             var getUser = await _userManager.FindByIdAsync(id);
-            if (getUser == null || !await _userManager.IsInRoleAsync(getUser, StaticData.user)|| getUser.IsDeleted==true)
+            if (getUser == null || !await _userManager.IsInRoleAsync(getUser, StaticData.user) || getUser.IsDeleted == true)
             {
-                res.Meesage = "لم يتم العثور على هذا المالك";
+                res.Meesage = "لم يتم العثور على هذا المتسخدم";
                 return BadRequest(res);
             }
             UserDTO user = new UserDTO
@@ -185,54 +184,54 @@ namespace Ma5zonyProject.Controllers
         }
         [HttpPut("edit")]
         [Consumes("multipart/form-data")]
-        public async Task<ActionResult> Edit([FromForm] AdminDTO newAdmin, IFormFile? img)
+        public async Task<ActionResult> Edit([FromForm] UserDTO newUser, IFormFile? img)
         {
-            var res = new Result<AdminDTO>();
+            var res = new Result<UserDTO>();
             if (!ModelState.IsValid)
             {
                 res.Meesage = "يوجد خطأ فى البيانات التى تم اراسلها";
                 return BadRequest(res);
             }
-            if (string.IsNullOrEmpty(newAdmin.Id))
+            if (string.IsNullOrEmpty(newUser.Id))
             {
                 res.Meesage = "لم يتم ارسال المعرف الشخصى";
                 return BadRequest(res);
             }
-            var admin = await _userManager.FindByIdAsync(newAdmin.Id);
-            if (admin == null || !await _userManager.IsInRoleAsync(admin,StaticData.admin) || admin.IsDeleted==true)
+            var user = await _userManager.FindByIdAsync(newUser.Id);
+            if (user == null || !await _userManager.IsInRoleAsync(user, StaticData.user) || user.IsDeleted == true)
             {
-                res.Meesage = "لم يتم العثور على هذا المالك";
+                res.Meesage = "لم يتم العثور على هذا المستخدم";
                 return BadRequest(res);
             }
-            if (admin.Email != newAdmin.Email)
+            if (user.Email != newUser.Email)
             {
-                var existingEmail = await _userManager.FindByEmailAsync(newAdmin.Email);
-                if (existingEmail != null && existingEmail.Id != admin.Id)
+                var existingEmail = await _userManager.FindByEmailAsync(newUser.Email);
+                if (existingEmail != null && existingEmail.Id != user.Id)
                 {
                     res.Meesage = "هذا البريد الإلكتروني مستخدم بالفعل.";
                     return BadRequest(res);
                 }
             }
-            if (admin.UserName != newAdmin.UserName)
+            if (user.UserName != newUser.UserName)
             {
-                var existingUserName = await _userManager.FindByNameAsync(newAdmin.UserName);
-                if (existingUserName != null && existingUserName.Id != admin.Id)
+                var existingUserName = await _userManager.FindByNameAsync(newUser.UserName);
+                if (existingUserName != null && existingUserName.Id != user.Id)
                 {
                     res.Meesage = "اسم المستخدم تم استخدامه";
                     return BadRequest(res);
                 }
             }
-            admin.Email = newAdmin.Email;
-            admin.UserName = newAdmin.UserName;
-            admin.Address = newAdmin.Address;
-            admin.Age = newAdmin.Age;
-            admin.PhoneNumber = newAdmin.PhoneNumber;
-            admin.Name = newAdmin.Name;
+            user.Email = newUser.Email;
+            user.UserName = newUser.UserName;
+            user.Address = newUser.Address;
+            user.Age = newUser.Age;
+            user.PhoneNumber = newUser.PhoneNumber;
+            user.Name = newUser.Name;
 
-            if (!string.IsNullOrEmpty(newAdmin.Password))
+            if (!string.IsNullOrEmpty(newUser.Password))
             {
-                var removeOldPassword = await _userManager.RemovePasswordAsync(admin);
-                var addNewPassWord = await _userManager.AddPasswordAsync(admin, newAdmin.Password);
+                var removeOldPassword = await _userManager.RemovePasswordAsync(user);
+                var addNewPassWord = await _userManager.AddPasswordAsync(user, newUser.Password);
                 if (!removeOldPassword.Succeeded || !addNewPassWord.Succeeded)
                 {
                     res.Meesage = "حدث خطأ اثناء تغير كلمة المرور";
@@ -251,17 +250,17 @@ namespace Ma5zonyProject.Controllers
                     return BadRequest(res);
                 }
                 var imgEx = Path.GetExtension(img.FileName);
-                if (!string.IsNullOrEmpty(admin.ImgUrl))
+                if (!string.IsNullOrEmpty(user.ImgUrl))
                 {
-                    FileHelper.DeleteFile(folderPath, admin.ImgUrl);
+                    FileHelper.DeleteFile(folderPath, user.ImgUrl);
                 }
-                admin.ImgUrl = Guid.NewGuid().ToString() + imgEx;
-                await FileHelper.SaveFileAsync(img, folderPath, admin.ImgUrl);
+                user.ImgUrl = Guid.NewGuid().ToString() + imgEx;
+                await FileHelper.SaveFileAsync(img, folderPath, user.ImgUrl);
             }
-            var updateAdmin = await _userManager.UpdateAsync(admin);
-            if (!updateAdmin.Succeeded)
+            var updateUser = await _userManager.UpdateAsync(user);
+            if (!updateUser.Succeeded)
             {
-                res.Meesage = "حدث خطأ اثناء تحديث الادمن";
+                res.Meesage = "حدث خطأ اثناء تحديث المستخدم";
                 return BadRequest(res);
             }
             res.IsSuccess = true;
@@ -270,21 +269,21 @@ namespace Ma5zonyProject.Controllers
         [HttpDelete("delete/{id}")]
         public async Task<ActionResult> Delete([FromRoute] string id)
         {
-            var res = new Result<AdminDTO>();
+            var res = new Result<UserDTO>();
             if (string.IsNullOrEmpty(id))
             {
                 res.Meesage = "لم يتم ارسال المعرف الشخصى";
                 return BadRequest(res);
             }
-            var getAdmin = await _userManager.FindByIdAsync(id);
-            if (getAdmin == null || !await _userManager.IsInRoleAsync(getAdmin,StaticData.admin) || getAdmin.IsDeleted==true)
+            var getUser = await _userManager.FindByIdAsync(id);
+            if (getUser == null || !await _userManager.IsInRoleAsync(getUser, StaticData.user) || getUser.IsDeleted == true)
             {
-                res.Meesage = "لم يتم العثور على المالك";
+                res.Meesage = "لم يتم العثور على المستخدم";
                 return BadRequest(res);
             }
-            getAdmin.IsDeleted = true;
-            var deleteAdmin = await _userManager.UpdateAsync(getAdmin);
-            if (!deleteAdmin.Succeeded)
+            getUser.IsDeleted = true;
+            var deleteUser = await _userManager.UpdateAsync(getUser);
+            if (!deleteUser.Succeeded)
             {
                 res.Meesage = "حدث خطأ اثناء الحذف";
                 return BadRequest(res);
