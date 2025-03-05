@@ -12,7 +12,7 @@ namespace Models.Models
         public string Name { get; set; }
         public double Price { get; set; }
         public int Quantity { get; set; }
-
+        public bool IsDeleted { get; set; }
         public ICollection<StoreProducts> StoreProducts { get; set; }
         public ICollection<UserMangeProduct> UserMangeProducts { get; set; }
         public ICollection<ProductExports> ProductExports { get; set; }
