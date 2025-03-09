@@ -1,10 +1,10 @@
-﻿
-using DataAccess.Data;
+﻿using DataAccess.Data;
 using DataAccess.IRepos;
 using DataAccess.Rpos;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Models.Models;
+
 namespace Ma5zonyProject
 {
     public class Program
@@ -14,27 +14,42 @@ namespace Ma5zonyProject
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
-
             builder.Services.AddControllers();
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
-            //builder.services.addscoped
-            //DbContext
+
+            // Configure CORS
             builder.Services.AddCors(options =>
             {
-                options.AddPolicy("AllowAll", policy =>
-                {
-                    policy.AllowAnyOrigin()   // يسمح بأي أصل (يمكنك تخصيصه بنطاقات معينة)
-                          .AllowAnyMethod()   // يسمح بأي نوع من الطلبات (GET, POST, PUT, DELETE, إلخ)
-                          .AllowAnyHeader();  // يسمح بأي رأس
-                });
+                options.AddPolicy("AllowFrontend",
+                    policy =>
+                    {
+                        policy.WithOrigins("http://localhost:5173") // Update this to match your front-end URL
+                              .AllowCredentials()  // Allow cookies
+                              .AllowAnyHeader()
+                              .AllowAnyMethod();
+                    });
             });
+
+            // Configure Application Cookie
+            builder.Services.ConfigureApplicationCookie(options =>
+            {
+                options.Cookie.HttpOnly = true;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // Use 'Always' in production
+                options.Cookie.SameSite = SameSiteMode.None; // Allow cross-origin cookies
+                options.LoginPath = "/api/Users/sign-in"; // Redirect unauthenticated users
+                //options.Cookie.IsEssential = true;
+            });
+
+            // Configure DbContext
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseSqlServer(builder.Configuration.GetConnectionString("DeafultConnection")));
-            //1-Configure Identity User&Roles
-            //
-            builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DeafultConnection")));
+
+            // Configure Identity
+            builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+                .AddEntityFrameworkStores<ApplicationDbContext>();
+
+            // Register Repositories
             builder.Services.AddScoped<CustomerIRepo, CustomerRepo>();
             builder.Services.AddScoped<ExportIRepo, ExportRepo>();
             builder.Services.AddScoped<ImportIRepo, ImportRepo>();
@@ -47,32 +62,32 @@ namespace Ma5zonyProject
             builder.Services.AddScoped<UserMangerProductIRepo, UserMangeProductRepo>();
             builder.Services.AddScoped<UserMangerStoreIRepo, UserMangeStoreRepo>();
             builder.Services.AddScoped<ApplicationUserIRepo, ApplicationUserRepo>();
+
+            // Configure Identity Options
             builder.Services.Configure<IdentityOptions>(options =>
             {
-                options.Password.RequireDigit = true;       // لازم يكون فيه رقم
-                options.Password.RequiredLength = 6;        // الحد الأدنى للطول (غيّره حسب الحاجة)
-                options.Password.RequireLowercase = true;  // لا يحتاج حروف صغيرة
-                options.Password.RequireUppercase = true;  // لا يحتاج حروف كبيرة
-                options.Password.RequireNonAlphanumeric = false; // لا يحتاج رموز خاصة
+                options.Password.RequireDigit = true;
+                options.Password.RequiredLength = 6;
+                options.Password.RequireLowercase = true;
+                options.Password.RequireUppercase = true;
+                options.Password.RequireNonAlphanumeric = false;
             });
-            //
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment()||app.Environment.IsProduction())
+            if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
-                app.UseStaticFiles();
             }
 
             app.UseHttpsRedirection();
-            app.UseStaticFiles();
+            app.UseStaticFiles(); // Place this once, before UseRouting
             app.UseRouting();
-            app.UseCors("AllowAll");
-            app.UseAuthentication();
+            app.UseCors("AllowFrontend");
+            app.UseAuthentication(); // Ensure this is before UseAuthorization
             app.UseAuthorization();
-
 
             app.MapControllers();
 

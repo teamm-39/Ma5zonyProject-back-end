@@ -118,13 +118,14 @@ namespace Ma5zonyProject.Controllers
         [HttpPost("sign-in")]
         public async Task<ActionResult> Login(UserLoginVM user)
         {
+            var xx = User.Identity.IsAuthenticated;
             Result<UserLoginVM> result = new(false);
             if (ModelState.IsValid)
             {
                 var applicationUser = await _userManager.FindByEmailAsync(user.Email);
                 if (applicationUser != null && await _userManager.CheckPasswordAsync(applicationUser, user.Password))
                 {
-                    await _signInManager.SignInAsync(applicationUser, false);
+                    await _signInManager.SignInAsync(applicationUser,isPersistent: true);
                     result.IsSuccess = true;
                     return Ok(result);
                 }

@@ -13,6 +13,7 @@ namespace Models.Models
         public string Country { get; set; }
         public string City { get; set; }
         public bool IsDeleted { get; set; }
+
         public ICollection<StoreProducts> StoreProducts { get; set; }
     }
 }

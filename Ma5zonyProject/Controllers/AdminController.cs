@@ -43,7 +43,7 @@ namespace Ma5zonyProject.Controllers
                 res.Meesage = "رقم الصفحة وعدد العناصر يجب أن يكونا أكبر";
                 return BadRequest(res);
             }
-            var adminUser = await _userManager.GetUsersInRoleAsync("Admin");
+            var adminUser = await _userManager.GetUsersInRoleAsync(StaticData.admin);
             var adminIds = adminUser.Select(u => u.Id).ToList();
             //fiteration
             var filter = new Dictionary<string, object>();
@@ -147,7 +147,7 @@ namespace Ma5zonyProject.Controllers
                     await FileHelper.SaveFileAsync(img, folder, imgName);
                 }
                 res.IsSuccess = true;
-                await _userManager.AddToRoleAsync(createdUser, StaticData.user);
+                await _userManager.AddToRoleAsync(createdUser, StaticData.admin);
                 return Ok(res);
             }
             res.Meesage = string.Join(" | ", createUser.Errors.Select(e => e.Description));
@@ -163,7 +163,7 @@ namespace Ma5zonyProject.Controllers
                 return BadRequest(res);
             }
             var getUser = await _userManager.FindByIdAsync(id);
-            if (getUser == null || !await _userManager.IsInRoleAsync(getUser, StaticData.user)|| getUser.IsDeleted==true)
+            if (getUser == null || !await _userManager.IsInRoleAsync(getUser, StaticData.admin) || getUser.IsDeleted == true)
             {
                 res.Meesage = "لم يتم العثور على هذا المالك";
                 return BadRequest(res);
@@ -199,7 +199,7 @@ namespace Ma5zonyProject.Controllers
                 return BadRequest(res);
             }
             var admin = await _userManager.FindByIdAsync(newAdmin.Id);
-            if (admin == null || !await _userManager.IsInRoleAsync(admin,StaticData.admin) || admin.IsDeleted==true)
+            if (admin == null || !await _userManager.IsInRoleAsync(admin, StaticData.admin) || admin.IsDeleted == true)
             {
                 res.Meesage = "لم يتم العثور على هذا المالك";
                 return BadRequest(res);
@@ -277,7 +277,7 @@ namespace Ma5zonyProject.Controllers
                 return BadRequest(res);
             }
             var getAdmin = await _userManager.FindByIdAsync(id);
-            if (getAdmin == null || !await _userManager.IsInRoleAsync(getAdmin,StaticData.admin) || getAdmin.IsDeleted==true)
+            if (getAdmin == null || !await _userManager.IsInRoleAsync(getAdmin, StaticData.admin) || getAdmin.IsDeleted == true)
             {
                 res.Meesage = "لم يتم العثور على المالك";
                 return BadRequest(res);
