@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Models.Models;
 using Models.ViewModels;
+using System.Security.Claims;
 using Utility;
 
 namespace Ma5zonyProject.Controllers
@@ -40,7 +41,7 @@ namespace Ma5zonyProject.Controllers
                                               pageNumber: pageNumber, pageSize: pageSize, data: []);
             if (pageSize < 1 || pageNumber < 1)
             {
-                res.Meesage = "رقم الصفحة وعدد العناصر يجب أن يكونا أكبر";
+                res.Meesage = "رقم الصفحة وعدد العناصر يجب أن يكونا أكبر من 0";
                 return BadRequest(res);
             }
             var adminUser = await _userManager.GetUsersInRoleAsync(StaticData.admin);
@@ -53,14 +54,14 @@ namespace Ma5zonyProject.Controllers
             if (!string.IsNullOrEmpty(phone)) filter.Add("PhoneNumber", phone);
             if (!string.IsNullOrEmpty(address)) filter.Add("Address", address);
             //data
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var adminUsers = _users.GetAll(
                                             pageNumber: pageNumber,
                                             pageSize: pageSize,
                                             filters: filter,
-                                            expression: e => adminIds.Contains(e.Id) && e.IsDeleted == false
+                                            expression: e => e.Id != userId && adminIds.Contains(e.Id) && e.IsDeleted == false
                                         );
             res.IsSuccess = true;
-
             res.Data = adminUsers.Data?.Select(user => new AdminsDTO
             {
                 Id = user.Id,
@@ -276,10 +277,16 @@ namespace Ma5zonyProject.Controllers
                 res.Meesage = "لم يتم ارسال المعرف الشخصى";
                 return BadRequest(res);
             }
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var getAdmin = await _userManager.FindByIdAsync(id);
             if (getAdmin == null || !await _userManager.IsInRoleAsync(getAdmin, StaticData.admin) || getAdmin.IsDeleted == true)
             {
                 res.Meesage = "لم يتم العثور على المالك";
+                return BadRequest(res);
+            }
+            if(userId == getAdmin.Id)
+            {
+                res.Meesage = "انت هذا المالك لا يمكن حذف بياناتك بنفسك";
                 return BadRequest(res);
             }
             getAdmin.IsDeleted = true;

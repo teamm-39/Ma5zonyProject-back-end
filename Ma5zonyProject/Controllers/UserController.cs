@@ -6,6 +6,7 @@ using Models.Models;
 using Models.ViewModels;
 using DataAccess.IRepos;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 namespace Ma5zonyProject.Controllers
 {
     [Route("api/[controller]")]
@@ -275,10 +276,16 @@ namespace Ma5zonyProject.Controllers
                 res.Meesage = "لم يتم ارسال المعرف الشخصى";
                 return BadRequest(res);
             }
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var getUser = await _userManager.FindByIdAsync(id);
             if (getUser == null || !await _userManager.IsInRoleAsync(getUser, StaticData.user) || getUser.IsDeleted == true)
             {
                 res.Meesage = "لم يتم العثور على المستخدم";
+                return BadRequest(res);
+            }
+            if (userId == getUser.Id)
+            {
+                res.Meesage = "انت هذا الموظف لا يمكن حذف بياناتك بنفسك";
                 return BadRequest(res);
             }
             getUser.IsDeleted = true;
