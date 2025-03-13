@@ -4,19 +4,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Models.Models
+namespace Models.ViewModels
 {
-    public class Product
+    public class ProductsVM
     {
         public int ProductId { get; set; }
         public string Name { get; set; }
         public double SellingPrice { get; set; }
         public double PurchasePrice { get; set; }
-        public int Quantity { get; set; }
         public int MinLimit { get; set; }
-        public bool IsDeleted { get; set; }
-        public ICollection<StoreProducts> StoreProducts { get; set; }
-        public ICollection<ProductExports> ProductExports { get; set; }
-        public ICollection<ProductImports> ProductImports { get; set; }
+        public int Quantity { get; set; }
     }
 }

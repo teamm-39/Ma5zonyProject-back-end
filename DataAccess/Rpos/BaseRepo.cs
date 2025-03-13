@@ -91,6 +91,22 @@ namespace DataAccess.Rpos
                                 query = query.Where(lambda);
                             }
                         }
+                        else if (property.PropertyType == typeof(double) || property.PropertyType == typeof(double?))
+                        {
+                            var valueString = filter.Value.ToString();
+                            if (!string.IsNullOrEmpty(valueString) && double.TryParse(valueString, out double doubleValue))
+                            {
+                                var valueExpression = Expression.Constant(doubleValue, typeof(double));
+
+                                // تحويل الـ propertyAccess إلى double عشان يكون النوعين متطابقين
+                                var convertedPropertyAccess = Expression.Convert(propertyAccess, typeof(double));
+
+                                var equalExpression = Expression.Equal(convertedPropertyAccess, valueExpression);
+
+                                var lambda = Expression.Lambda<Func<T, bool>>(equalExpression, parameter);
+                                query = query.Where(lambda);
+                            }
+                        }
                         // فلترة التواريخ
                         else if (property.PropertyType == typeof(DateTime) || property.PropertyType == typeof(DateTime?))
                         {

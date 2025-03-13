@@ -5,11 +5,13 @@ VisualStudioVersion = 17.10.35013.160
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ma5zonyProject", "Ma5zonyProject\Ma5zonyProject.csproj", "{B69027BC-981E-483A-A4E2-B3AB72D33C4C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Models", "Models\Models.csproj", "{6B8E42A8-2DE8-477E-87D7-FDB8C8EC1C53}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Models", "Models\Models.csproj", "{6B8E42A8-2DE8-477E-87D7-FDB8C8EC1C53}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataAccess", "DataAccess\DataAccess.csproj", "{4B164726-536E-4203-BC11-C80EA2FC1436}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataAccess", "DataAccess\DataAccess.csproj", "{4B164726-536E-4203-BC11-C80EA2FC1436}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Utility", "Utility\Utility.csproj", "{94806D6A-9B98-480C-B26D-1F40981F8042}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Utility", "Utility\Utility.csproj", "{94806D6A-9B98-480C-B26D-1F40981F8042}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BackgroundServices", "BackgroundServices\BackgroundServices.csproj", "{BF7F7927-EDAF-4391-875F-AE0321EE42B8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{94806D6A-9B98-480C-B26D-1F40981F8042}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{94806D6A-9B98-480C-B26D-1F40981F8042}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{94806D6A-9B98-480C-B26D-1F40981F8042}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BF7F7927-EDAF-4391-875F-AE0321EE42B8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BF7F7927-EDAF-4391-875F-AE0321EE42B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BF7F7927-EDAF-4391-875F-AE0321EE42B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BF7F7927-EDAF-4391-875F-AE0321EE42B8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,6 +1,7 @@
 ﻿using DataAccess.Data;
 using DataAccess.IRepos;
 using DataAccess.Rpos;
+using Hangfire;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Models.Models;
@@ -12,7 +13,9 @@ namespace Ma5zonyProject
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-
+            //add hangFire
+            builder.Services.AddHangfire(h => h.UseSqlServerStorage(builder.Configuration.GetConnectionString("DeafultConnection")));
+            builder.Services.AddHangfireServer();
             // Add services to the container.
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
@@ -81,7 +84,7 @@ namespace Ma5zonyProject
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
-
+            app.UseHangfireDashboard("/hangfire");
             app.UseHttpsRedirection();
             app.UseStaticFiles(); // Place this once, before UseRouting
             app.UseRouting();
