@@ -103,5 +103,85 @@ namespace Ma5zonyProject.Controllers
             res.IsSuccess = true;
             return Ok(res);
         }
+        [HttpPut("edit")]
+        public IActionResult Edit(SupplierEditVM supplierVM)
+        {
+            var res = new Result<SupplierCreateVM>();
+            if (!ModelState.IsValid)
+            {
+                res.Meesage = "يرجى ادخال بيانات المنتج بشكل صحيح";
+                return BadRequest(res);
+            }
+            var oldSupplier = _supplier.GetOne(e => e.SupplierId == supplierVM.SupplierId && e.IsDeleted == false);
+            if (oldSupplier == null)
+            {
+                res.Meesage = "لم يتم العثور على هذا المورد";
+                return BadRequest(res);
+            }
+            if (supplierVM.Age < 18)
+            {
+                res.Meesage = "عمر المورد يجب ان يكون اكبر من 17 سنه";
+                return BadRequest(res);
+            }
+            var chekIfNameExists = _supplier.GetOne(e => e.Name == supplierVM.Name && e.SupplierId != supplierVM.SupplierId);
+            if (chekIfNameExists != null)
+            {
+                res.Meesage = "اسم المورد موجود بالفعل";
+                return BadRequest(res);
+            }
+            var chekIfEmailExists = _supplier.GetOne(e => e.Email == supplierVM.Email && e.SupplierId != supplierVM.SupplierId);
+            if (chekIfEmailExists != null)
+            {
+                res.Meesage = "البريد الالكترونى موجود بالفعل";
+                return BadRequest(res);
+            }
+            oldSupplier.Name = supplierVM.Name;
+            oldSupplier.Email = supplierVM.Email;
+            oldSupplier.Address = supplierVM.Address;
+            oldSupplier.PhoneNumber = supplierVM.PhoneNumber;
+            oldSupplier.Age = supplierVM.Age;
+            oldSupplier.IsReliable = supplierVM.IsReliable;
+            _supplier.Edit(oldSupplier);
+            _supplier.commit();
+            res.IsSuccess = true;
+            return Ok(res);
+        }
+        [HttpGet("details/{id}")]
+        public IActionResult GetOne(int id)
+        {
+            var res = new Result<SupplierVM>();
+            var supplier = _supplier.GetOne(e => e.SupplierId == id && e.IsDeleted == false);
+            if (supplier == null)
+            {
+                res.Meesage = "لم يتم العثور على هذا المورد";
+                return BadRequest(res);
+            }
+            var supplierVM = new SupplierVM() { 
+                SupplierId = supplier.SupplierId,
+                Name = supplier.Name,
+                Email = supplier.Email,
+                Address = supplier.Address,
+                Age = supplier.Age,
+                IsReliable = supplier.IsReliable,
+                PhoneNumber = supplier.PhoneNumber,
+                NumOfDeal = supplier.NumOfDeal
+            };
+            res.Data = supplierVM;
+            res.IsSuccess= true;
+            return Ok(res);
+        }
+        [HttpDelete("delete/{id}")]
+        public IActionResult Delete(int id) { 
+        var res=new Result<SupplierVM>();
+            var supplier=_supplier.GetOne(e=>e.SupplierId==id&&e.IsDeleted== false);
+            if (supplier == null) {
+                res.Meesage = "لم يتم العثور على هذا المورد";
+                return BadRequest(res);
+            }
+            _supplier.Delete(id);
+            _supplier.commit();
+            res.IsSuccess= true;
+            return Ok(res);
+        }
     }
 }
