@@ -46,6 +46,7 @@ namespace Ma5zonyProject.Controllers
                 PurchasePrice = p.PurchasePrice,
                 MinLimit = p.MinLimit,
             }).ToList();
+            res.IsSuccess=true;
             res.Total = products.Total;
             res.PageNumber = pageNumber;
             res.PageSize = pageSize;

@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Models.Models
+namespace Models.ViewModels
 {
-    public class Supplier
+    public class SuppliersVM
     {
         public int SupplierId { get; set; }
         public string Name { get; set; }
@@ -16,7 +16,5 @@ namespace Models.Models
         public string PhoneNumber { get; set; }
         public int NumOfDeal { get; set; }
         public bool IsReliable { get; set; }
-        public bool IsDeleted { get; set; }
-        public ICollection<Import> Imports { get; set; }
     }
 }
