@@ -17,6 +17,5 @@ namespace Models.Models
         public int NumOfDeal { get; set; }
         public bool IsReliable { get; set; }
         public bool IsDeleted { get; set; }
-        public ICollection<Import> Imports { get; set; }
     }
 }

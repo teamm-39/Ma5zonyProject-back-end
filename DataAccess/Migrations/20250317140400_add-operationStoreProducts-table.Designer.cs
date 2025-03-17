@@ -4,6 +4,7 @@ using DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250317140400_add-operationStoreProducts-table")]
+    partial class addoperationStoreProductstable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -257,6 +260,42 @@ namespace DataAccess.Migrations
                     b.ToTable("Customers");
                 });
 
+            modelBuilder.Entity("Models.Models.Export", b =>
+                {
+                    b.Property<int>("ExportId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ExportId"));
+
+                    b.Property<string>("ApplicationUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("DateTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("FromStoreId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<double>("TotalPrice")
+                        .HasColumnType("float");
+
+                    b.HasKey("ExportId");
+
+                    b.HasIndex("ApplicationUserId");
+
+                    b.HasIndex("CustomerId");
+
+                    b.ToTable("Exports");
+                });
+
             modelBuilder.Entity("Models.Models.LookupOperationType", b =>
                 {
                     b.Property<int>("LookupOperationTypeId")
@@ -497,6 +536,25 @@ namespace DataAccess.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Models.Models.Export", b =>
+                {
+                    b.HasOne("Models.Models.ApplicationUser", "ApplicationUser")
+                        .WithMany("Exports")
+                        .HasForeignKey("ApplicationUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Models.Models.Customer", "Customer")
+                        .WithMany("Exports")
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ApplicationUser");
+
+                    b.Navigation("Customer");
+                });
+
             modelBuilder.Entity("Models.Models.Operation", b =>
                 {
                     b.HasOne("Models.Models.ApplicationUser", "ApplicationUser")
@@ -564,7 +622,14 @@ namespace DataAccess.Migrations
 
             modelBuilder.Entity("Models.Models.ApplicationUser", b =>
                 {
+                    b.Navigation("Exports");
+
                     b.Navigation("Operations");
+                });
+
+            modelBuilder.Entity("Models.Models.Customer", b =>
+                {
+                    b.Navigation("Exports");
                 });
 
             modelBuilder.Entity("Models.Models.LookupOperationType", b =>

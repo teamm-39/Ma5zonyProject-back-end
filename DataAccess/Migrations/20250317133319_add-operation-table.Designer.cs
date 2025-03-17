@@ -4,6 +4,7 @@ using DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250317133319_add-operation-table")]
+    partial class addoperationtable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -257,6 +260,42 @@ namespace DataAccess.Migrations
                     b.ToTable("Customers");
                 });
 
+            modelBuilder.Entity("Models.Models.Export", b =>
+                {
+                    b.Property<int>("ExportId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ExportId"));
+
+                    b.Property<string>("ApplicationUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("DateTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("FromStoreId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<double>("TotalPrice")
+                        .HasColumnType("float");
+
+                    b.HasKey("ExportId");
+
+                    b.HasIndex("ApplicationUserId");
+
+                    b.HasIndex("CustomerId");
+
+                    b.ToTable("Exports");
+                });
+
             modelBuilder.Entity("Models.Models.LookupOperationType", b =>
                 {
                     b.Property<int>("LookupOperationTypeId")
@@ -265,9 +304,11 @@ namespace DataAccess.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("LookupOperationTypeId"));
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("Name")
+                        .HasColumnType("int");
+
+                    b.Property<int>("OperationId")
+                        .HasColumnType("int");
 
                     b.HasKey("LookupOperationTypeId");
 
@@ -283,7 +324,6 @@ namespace DataAccess.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("OperationId"));
 
                     b.Property<string>("ApplicationUserId")
-                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("DateTime")
@@ -296,32 +336,10 @@ namespace DataAccess.Migrations
 
                     b.HasIndex("ApplicationUserId");
 
-                    b.HasIndex("LookupOperationTypeId");
+                    b.HasIndex("LookupOperationTypeId")
+                        .IsUnique();
 
                     b.ToTable("Operations");
-                });
-
-            modelBuilder.Entity("Models.Models.OperationStoreProduct", b =>
-                {
-                    b.Property<int>("StoreId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("OperationId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Quantity")
-                        .HasColumnType("int");
-
-                    b.HasKey("StoreId", "ProductId", "OperationId");
-
-                    b.HasIndex("OperationId");
-
-                    b.HasIndex("ProductId");
-
-                    b.ToTable("operationStoreProducts");
                 });
 
             modelBuilder.Entity("Models.Models.Product", b =>
@@ -497,50 +515,38 @@ namespace DataAccess.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Models.Models.Operation", b =>
+            modelBuilder.Entity("Models.Models.Export", b =>
                 {
                     b.HasOne("Models.Models.ApplicationUser", "ApplicationUser")
-                        .WithMany("Operations")
+                        .WithMany("Exports")
                         .HasForeignKey("ApplicationUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Models.Models.LookupOperationType", "LookupOperationType")
-                        .WithMany("Operations")
-                        .HasForeignKey("LookupOperationTypeId")
+                    b.HasOne("Models.Models.Customer", "Customer")
+                        .WithMany("Exports")
+                        .HasForeignKey("CustomerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("ApplicationUser");
 
-                    b.Navigation("LookupOperationType");
+                    b.Navigation("Customer");
                 });
 
-            modelBuilder.Entity("Models.Models.OperationStoreProduct", b =>
+            modelBuilder.Entity("Models.Models.Operation", b =>
                 {
-                    b.HasOne("Models.Models.Operation", "Operation")
-                        .WithMany()
-                        .HasForeignKey("OperationId")
+                    b.HasOne("Models.Models.ApplicationUser", null)
+                        .WithMany("Operations")
+                        .HasForeignKey("ApplicationUserId");
+
+                    b.HasOne("Models.Models.LookupOperationType", "LookupOperationType")
+                        .WithOne("Operation")
+                        .HasForeignKey("Models.Models.Operation", "LookupOperationTypeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Models.Models.Product", "Product")
-                        .WithMany()
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Models.Models.Store", "Store")
-                        .WithMany()
-                        .HasForeignKey("StoreId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Operation");
-
-                    b.Navigation("Product");
-
-                    b.Navigation("Store");
+                    b.Navigation("LookupOperationType");
                 });
 
             modelBuilder.Entity("Models.Models.StoreProducts", b =>
@@ -564,12 +570,20 @@ namespace DataAccess.Migrations
 
             modelBuilder.Entity("Models.Models.ApplicationUser", b =>
                 {
+                    b.Navigation("Exports");
+
                     b.Navigation("Operations");
+                });
+
+            modelBuilder.Entity("Models.Models.Customer", b =>
+                {
+                    b.Navigation("Exports");
                 });
 
             modelBuilder.Entity("Models.Models.LookupOperationType", b =>
                 {
-                    b.Navigation("Operations");
+                    b.Navigation("Operation")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Models.Models.Store", b =>

@@ -15,8 +15,5 @@ namespace Models.Models
         public int Quantity { get; set; }
         public int MinLimit { get; set; }
         public bool IsDeleted { get; set; }
-        public ICollection<StoreProducts> StoreProducts { get; set; }
-        public ICollection<ProductExports> ProductExports { get; set; }
-        public ICollection<ProductImports> ProductImports { get; set; }
     }
 }

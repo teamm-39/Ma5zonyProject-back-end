@@ -1,5 +1,6 @@
 ﻿using DataAccess.Data;
 using DataAccess.IRepos;
+using Microsoft.EntityFrameworkCore;
 using Models.Models;
 using System;
 using System.Collections.Generic;
@@ -9,10 +10,10 @@ using System.Threading.Tasks;
 
 namespace DataAccess.Rpos
 {
-    public class ExportRepo : BaseRepo<Export>, ExportIRepo
+    public class OperationRepo : BaseRepo<Operation>, OperationIRepo
     {
         ApplicationDbContext _context;
-        public ExportRepo(ApplicationDbContext context) : base(context)
+        public OperationRepo(ApplicationDbContext context) : base(context)
         {
             _context = context;
         }

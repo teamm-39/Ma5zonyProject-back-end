@@ -7,7 +7,7 @@ using Models.Models;
 
 namespace DataAccess.IRepos
 {
-    public interface UserMangerStoreIRepo :IBaseRepo <UserMangeStore>
+    public interface OperationIRepo : IBaseRepo <Operation>
     {
     }
 }

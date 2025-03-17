@@ -54,16 +54,10 @@ namespace Ma5zonyProject
 
             // Register Repositories
             builder.Services.AddScoped<CustomerIRepo, CustomerRepo>();
-            builder.Services.AddScoped<ExportIRepo, ExportRepo>();
-            builder.Services.AddScoped<ImportIRepo, ImportRepo>();
             builder.Services.AddScoped<ProductIRepo, ProductRepo>();
             builder.Services.AddScoped<StoreIRepo, StoreRepo>();
             builder.Services.AddScoped<SupplierIRepo, SupplierRepo>();
-            builder.Services.AddScoped<ProductExportIRepo, ProductExportRepo>();
-            builder.Services.AddScoped<ProductImportIRepo, ProductImportRepo>();
             builder.Services.AddScoped<StoreProductIRepo, StoreProductRepo>();
-            builder.Services.AddScoped<UserMangerProductIRepo, UserMangeProductRepo>();
-            builder.Services.AddScoped<UserMangerStoreIRepo, UserMangeStoreRepo>();
             builder.Services.AddScoped<ApplicationUserIRepo, ApplicationUserRepo>();
 
             // Configure Identity Options
