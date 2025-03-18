@@ -9,6 +9,6 @@ namespace DataAccess.IRepos
 {
     public interface OperationIRepo : IBaseRepo <Operation>
     {
-        public int? CreateOperation(int LkOperationType, string userId);
+        public int CreateOperation(int LkOperationType, string userId, int supplierOrCustomerId);
     }
 }

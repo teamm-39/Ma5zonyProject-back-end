@@ -8,6 +8,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using Utility;
 
 namespace DataAccess.Rpos
 {
@@ -18,9 +19,16 @@ namespace DataAccess.Rpos
         {
             _context = context;
         }
-        public int? CreateOperation(int LkOperationType, string userId)
+        public int CreateOperation(int LkOperationType, string userId, int supplierOrCustomerId)
         {
             var operation = new Operation() { ApplicationUserId = userId, DateTime = DateTime.Now, LookupOperationTypeId = LkOperationType };
+            if (LkOperationType == StaticData.ImportOperation)
+            {
+                operation.SupplierId= supplierOrCustomerId;
+            }else if (LkOperationType == StaticData.ExportOperation)
+            {
+                operation.CustomerId= supplierOrCustomerId;
+            }
             _context.Add(operation);
             return operation.OperationId;
         }
