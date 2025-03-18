@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Models.Models;
+using Models.ViewModels;
 using System.Security.Claims;
 using Utility;
 namespace Ma5zonyProject.Controllers
@@ -22,7 +23,7 @@ namespace Ma5zonyProject.Controllers
             return Ok();
         }
         [HttpPost("create")]
-        public IActionResult Create()
+        public IActionResult Create(OperationStoreProductCreateVM operationStoreProductCreateVM)
         {
             var res = new Result<Operation>();
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -33,7 +34,6 @@ namespace Ma5zonyProject.Controllers
             var operationId=_operation.CreateOperation(StaticData.ImportOperation, userId);
             _operation.commit();
             res.IsSuccess = true;
-
             return Ok(res);
         }
     }
