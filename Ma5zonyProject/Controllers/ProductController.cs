@@ -128,7 +128,7 @@ namespace Ma5zonyProject.Controllers
                 res.Meesage = "يجب ان يكون الحد الادنى اكبر من الصفر";
                 return BadRequest(res);
             }
-            var chekIfNameExists=_product.GetOne(e=>e.Name==productVM.Name);
+            var chekIfNameExists=_product.GetOne(e=>e.Name==productVM.Name && e.ProductId != productVM.ProductId);
             if (chekIfNameExists != null)
             {
                 res.Meesage = "اسم المنتج مستخدم من قبل";

@@ -8,13 +8,16 @@ namespace Models.Models
 {
     public class OperationStoreProduct
     {
+        public int OperationStoreProductId { get; set; }
         public int OperationId { get; set; }
         public int ProductId { get; set; }
-        public int StoreId { get; set; }
+        public int? FromStoreId { get; set; }
+        public int? ToStoreId { get; set; }
         public int Quantity { get; set; }
 
         public Operation Operation { get; set; }
         public Product Product { get; set; }
-        public Store Store { get; set; }
+        public Store FromStore { get; set; }
+        public Store ToStore { get; set; }
     }
 }

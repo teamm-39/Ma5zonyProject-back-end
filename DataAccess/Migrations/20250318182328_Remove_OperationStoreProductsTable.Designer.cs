@@ -4,6 +4,7 @@ using DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250318182328_Remove_OperationStoreProductsTable")]
+    partial class Remove_OperationStoreProductsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -301,42 +304,6 @@ namespace DataAccess.Migrations
                     b.ToTable("Operations");
                 });
 
-            modelBuilder.Entity("Models.Models.OperationStoreProduct", b =>
-                {
-                    b.Property<int>("OperationStoreProductId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("OperationStoreProductId"));
-
-                    b.Property<int?>("FromStoreId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("OperationId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Quantity")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("ToStoreId")
-                        .HasColumnType("int");
-
-                    b.HasKey("OperationStoreProductId");
-
-                    b.HasIndex("FromStoreId");
-
-                    b.HasIndex("OperationId");
-
-                    b.HasIndex("ProductId");
-
-                    b.HasIndex("ToStoreId");
-
-                    b.ToTable("OperationStoreProducts");
-                });
-
             modelBuilder.Entity("Models.Models.Product", b =>
                 {
                     b.Property<int>("ProductId")
@@ -529,37 +496,6 @@ namespace DataAccess.Migrations
                     b.Navigation("LookupOperationType");
                 });
 
-            modelBuilder.Entity("Models.Models.OperationStoreProduct", b =>
-                {
-                    b.HasOne("Models.Models.Store", "FromStore")
-                        .WithMany("FromOperations")
-                        .HasForeignKey("FromStoreId");
-
-                    b.HasOne("Models.Models.Operation", "Operation")
-                        .WithMany()
-                        .HasForeignKey("OperationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Models.Models.Product", "Product")
-                        .WithMany()
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Models.Models.Store", "ToStore")
-                        .WithMany("ToOperations")
-                        .HasForeignKey("ToStoreId");
-
-                    b.Navigation("FromStore");
-
-                    b.Navigation("Operation");
-
-                    b.Navigation("Product");
-
-                    b.Navigation("ToStore");
-                });
-
             modelBuilder.Entity("Models.Models.StoreProducts", b =>
                 {
                     b.HasOne("Models.Models.Product", "Product")
@@ -591,11 +527,7 @@ namespace DataAccess.Migrations
 
             modelBuilder.Entity("Models.Models.Store", b =>
                 {
-                    b.Navigation("FromOperations");
-
                     b.Navigation("StoreProducts");
-
-                    b.Navigation("ToOperations");
                 });
 #pragma warning restore 612, 618
         }

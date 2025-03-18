@@ -15,5 +15,7 @@ namespace Models.Models
         public bool IsDeleted { get; set; }
 
         public ICollection<StoreProducts> StoreProducts { get; set; }
+        public ICollection<OperationStoreProduct> FromOperations { get; set; }
+        public ICollection<OperationStoreProduct> ToOperations { get; set; }
     }
 }

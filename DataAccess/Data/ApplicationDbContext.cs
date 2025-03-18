@@ -17,7 +17,7 @@ namespace DataAccess.Data
         public DbSet<StoreProducts> StoresProducts { get; set; }
         public DbSet<Supplier> Suppliers { get; set; }
         public DbSet<LookupOperationType> LookupOperationTypes { get; set; }
-        public DbSet<OperationStoreProduct> operationStoreProducts { get; set; }
+        public DbSet<OperationStoreProduct> OperationStoreProducts { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -29,7 +29,15 @@ namespace DataAccess.Data
                 .HasMany(l => l.Operations)
                 .WithOne(o => o.LookupOperationType);
 
-            builder.Entity<OperationStoreProduct>().HasKey(e => new { e.StoreId, e.ProductId, e.OperationId });
+            builder.Entity<OperationStoreProduct>()
+        .HasOne(osp => osp.FromStore)
+        .WithMany(s => s.FromOperations)
+        .HasForeignKey(osp => osp.FromStoreId);
+
+            builder.Entity<OperationStoreProduct>()
+    .HasOne(osp => osp.ToStore)
+    .WithMany(s => s.ToOperations)
+    .HasForeignKey(osp => osp.ToStoreId);
         }
     }
 }

@@ -10,5 +10,7 @@ namespace Utility
     {
         public const String user = "user";
         public const String admin = "admin";
+        public const int ImportOperation = 1;
+        public const int ExportOperation = 2;
     }
 }

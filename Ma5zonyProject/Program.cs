@@ -2,6 +2,7 @@
 using DataAccess.IRepos;
 using DataAccess.Rpos;
 using Hangfire;
+using Ma5zonyProject.Controllers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Models.Models;
@@ -56,9 +57,11 @@ namespace Ma5zonyProject
             builder.Services.AddScoped<CustomerIRepo, CustomerRepo>();
             builder.Services.AddScoped<ProductIRepo, ProductRepo>();
             builder.Services.AddScoped<StoreIRepo, StoreRepo>();
+            builder.Services.AddScoped<OperationIRepo, OperationRepo>();
             builder.Services.AddScoped<SupplierIRepo, SupplierRepo>();
             builder.Services.AddScoped<StoreProductIRepo, StoreProductRepo>();
             builder.Services.AddScoped<ApplicationUserIRepo, ApplicationUserRepo>();
+            builder.Services.AddScoped<OperationStoreProductIRepo, OperationStoreProductRepo>();
 
             // Configure Identity Options
             builder.Services.Configure<IdentityOptions>(options =>
