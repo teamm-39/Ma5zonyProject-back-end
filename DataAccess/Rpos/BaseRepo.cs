@@ -51,83 +51,47 @@ namespace DataAccess.Rpos
             {
                 foreach (var filter in filters)
                 {
-                    var property = typeof(T).GetProperty(filter.Key);
-                    if (property != null)
+                    var properties = filter.Key.Split('.'); // تقسيم الـ Key لمعرفة إن كان يحتوي على علاقة
+                    var parameter = Expression.Parameter(typeof(T), "x");
+                    Expression propertyAccess = parameter;
+
+                    foreach (var prop in properties)
                     {
-                        var parameter = Expression.Parameter(typeof(T), "x");
-                        var propertyAccess = Expression.Property(parameter, property);
+                        var property = propertyAccess.Type.GetProperty(prop);
+                        if (property == null) break;
+                        propertyAccess = Expression.Property(propertyAccess, property);
+                    }
 
-                        // فلترة النصوص
-                        if (property.PropertyType == typeof(string))
+                    if (propertyAccess.Type == typeof(string))
+                    {
+                        var value = Expression.Constant(filter.Value.ToString()?.ToLower());
+                        var toLowerMethod = typeof(string).GetMethod("ToLower", Type.EmptyTypes);
+                        var containsMethod = typeof(string).GetMethod("Contains", new[] { typeof(string) });
+
+                        var propertyLower = Expression.Call(propertyAccess, toLowerMethod);
+                        var containsExpression = Expression.Call(propertyLower, containsMethod, value);
+
+                        var lambda = Expression.Lambda<Func<T, bool>>(containsExpression, parameter);
+                        query = query.Where(lambda);
+                    }
+                    else if (propertyAccess.Type == typeof(DateTime) || propertyAccess.Type == typeof(DateTime?))
+                    {
+                        if (DateTime.TryParse(filter.Value.ToString(), out DateTime dateValue))
                         {
-                            var value = Expression.Constant(filter.Value.ToString()?.ToLower());
-                            var toLowerMethod = typeof(string).GetMethod("ToLower", Type.EmptyTypes);
-                            var containsMethod = typeof(string).GetMethod("Contains", new[] { typeof(string) });
-
-                            var propertyLower = Expression.Call(propertyAccess, toLowerMethod);
-                            var containsExpression = Expression.Call(propertyLower, containsMethod, value);
-
-                            var lambda = Expression.Lambda<Func<T, bool>>(containsExpression, parameter);
+                            var value = Expression.Constant(dateValue, typeof(DateTime));
+                            var greaterThanOrEqualExpression = Expression.GreaterThanOrEqual(propertyAccess, value);
+                            var lambda = Expression.Lambda<Func<T, bool>>(greaterThanOrEqualExpression, parameter);
                             query = query.Where(lambda);
                         }
-                        // فلترة الأعداد الصحيحة
-                        else if (property.PropertyType == typeof(int) || property.PropertyType == typeof(int?))
+                    }
+                    else if (propertyAccess.Type == typeof(int) || propertyAccess.Type == typeof(int?))
+                    {
+                        if (int.TryParse(filter.Value.ToString(), out int intValue))
                         {
-                            var valueString = filter.Value.ToString();
-                            if (!string.IsNullOrEmpty(valueString))
-                            {
-                                var parameterStr = Expression.Parameter(typeof(T), "x");
-                                var propertyAccessStr = Expression.Property(parameterStr, property);
-
-                                // تحويل الرقم إلى نص
-                                var toStringMethod = typeof(object).GetMethod("ToString");
-                                var propertyAsString = Expression.Call(propertyAccessStr, toStringMethod);
-
-                                var containsMethod = typeof(string).GetMethod("Contains", new[] { typeof(string) });
-                                var valueExpression = Expression.Constant(valueString);
-                                var containsExpression = Expression.Call(propertyAsString, containsMethod, valueExpression);
-
-                                var lambda = Expression.Lambda<Func<T, bool>>(containsExpression, parameterStr);
-                                query = query.Where(lambda);
-                            }
-                        }
-                        else if (property.PropertyType == typeof(double) || property.PropertyType == typeof(double?))
-                        {
-                            var valueString = filter.Value.ToString();
-                            if (!string.IsNullOrEmpty(valueString) && double.TryParse(valueString, out double doubleValue))
-                            {
-                                var valueExpression = Expression.Constant(doubleValue, typeof(double));
-
-                                // تحويل الـ propertyAccess إلى double عشان يكون النوعين متطابقين
-                                var convertedPropertyAccess = Expression.Convert(propertyAccess, typeof(double));
-
-                                var equalExpression = Expression.Equal(convertedPropertyAccess, valueExpression);
-
-                                var lambda = Expression.Lambda<Func<T, bool>>(equalExpression, parameter);
-                                query = query.Where(lambda);
-                            }
-                        }
-                        // فلترة التواريخ
-                        else if (property.PropertyType == typeof(DateTime) || property.PropertyType == typeof(DateTime?))
-                        {
-                            if (DateTime.TryParse(filter.Value.ToString(), out DateTime dateValue))
-                            {
-                                var value = Expression.Constant(dateValue);
-                                var equalExpression = Expression.Equal(propertyAccess, value);
-                                var lambda = Expression.Lambda<Func<T, bool>>(equalExpression, parameter);
-                                query = query.Where(lambda);
-                            }
-                        }
-                        // فلترة القيم المنطقية (Boolean)
-                        else if (property.PropertyType == typeof(bool) || property.PropertyType == typeof(bool?))
-                        {
-                            if (bool.TryParse(filter.Value.ToString(), out bool boolValue))
-                            {
-                                var value = Expression.Constant(boolValue);
-                                var equalExpression = Expression.Equal(propertyAccess, value);
-                                var lambda = Expression.Lambda<Func<T, bool>>(equalExpression, parameter);
-                                query = query.Where(lambda);
-                            }
+                            var value = Expression.Constant(intValue);
+                            var equalExpression = Expression.Equal(propertyAccess, value);
+                            var lambda = Expression.Lambda<Func<T, bool>>(equalExpression, parameter);
+                            query = query.Where(lambda);
                         }
                     }
                 }

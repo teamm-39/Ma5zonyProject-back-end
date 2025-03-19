@@ -6,13 +6,10 @@ using System.Threading.Tasks;
 
 namespace Models.ViewModels
 {
-    public class OperationStoreProductCreateVM
+    public class StoreProductForCreatImportOperationVM
     {
-        public int OperationId { get; set; }
         public int ProductId { get; set; }
-        public int ToStoreId { get; set; }
         public int Quantity { get; set; }
-
-        public int SupplierOrCustomerId { get; set; }
+        public int ToStoreId { get; set; }
     }
 }

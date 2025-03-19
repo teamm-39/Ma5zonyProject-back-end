@@ -14,6 +14,5 @@ namespace Models.Models
         public string? ImgUrl { get; set; }
         public string? Address { get; set; }
         public bool IsDeleted { get; set; }
-        public ICollection<Operation> Operations { get; set; }
     }
 }

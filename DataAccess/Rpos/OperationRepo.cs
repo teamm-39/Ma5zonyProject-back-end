@@ -19,9 +19,9 @@ namespace DataAccess.Rpos
         {
             _context = context;
         }
-        public int CreateOperation(int LkOperationType, string userId, int supplierOrCustomerId)
+        public int CreateOperation(int LkOperationType, string userId, int supplierOrCustomerId, double totalPrice)
         {
-            var operation = new Operation() { ApplicationUserId = userId, DateTime = DateTime.Now, LookupOperationTypeId = LkOperationType };
+            var operation = new Operation() { ApplicationUserId = userId, DateTime = DateTime.Now, LookupOperationTypeId = LkOperationType, TotalPrice=totalPrice };
             if (LkOperationType == StaticData.ImportOperation)
             {
                 operation.SupplierId= supplierOrCustomerId;
@@ -30,6 +30,7 @@ namespace DataAccess.Rpos
                 operation.CustomerId= supplierOrCustomerId;
             }
             _context.Add(operation);
+            _context.SaveChanges();
             return operation.OperationId;
         }
 

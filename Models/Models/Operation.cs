@@ -14,7 +14,7 @@ namespace Models.Models
         public string ApplicationUserId { get; set; }
         public int? SupplierId { get; set; }
         public int? CustomerId { get; set; }
-
+        public double? TotalPrice { get; set; }
         public Supplier Supplier { get; set; }
         public Customer Customer { get; set; }
         public ApplicationUser ApplicationUser { get; set; }
