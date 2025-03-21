@@ -51,7 +51,7 @@ namespace Ma5zonyProject.Controllers
             var data = _operation.GetAll(
                 pageSize: pageSize, pageNumber: pageNumber,
                 includes: [e => e.Supplier, e => e.ApplicationUser],
-                filters:filters);
+                filters: filters);
 
             var importsOperations = data?.Data?.Select(op => new ImportsVM
             {
@@ -65,7 +65,7 @@ namespace Ma5zonyProject.Controllers
             res.IsSuccess = true;
             res.Total = data.Total;
             res.PageNumber = pageNumber;
-            res.PageSize=pageSize;
+            res.PageSize = pageSize;
             return Ok(res);
         }
         [HttpPost("create")]
@@ -138,6 +138,64 @@ namespace Ma5zonyProject.Controllers
                 }
             }
             res.IsSuccess = true;
+            return Ok(res);
+        }
+        [HttpGet("details/{id}")]
+        public IActionResult GetOPeration(int id)
+        {
+            var res = new Result<OperationVM>();
+            var operation = _operation.GetOne(e => e.OperationId == id && e.LookupOperationTypeId == StaticData.ImportOperation, includes: [e => e.ApplicationUser, e => e.Supplier]);
+            if (operation == null)
+            {
+                res.Meesage = "لم يتم العثور على هذه العمليه ";
+                return BadRequest(res);
+            }
+            var operationVM = new OperationVM()
+            {
+                OperationId = operation.OperationId,
+                DateTime = operation.DateTime,
+                UserName = operation.ApplicationUser.Name,
+                SupplierName = operation.Supplier.Name,
+                TotalPrice = operation.TotalPrice
+            };
+            res.Data = operationVM;
+            return Ok(res);
+        }
+        [HttpGet("details/get-products-to-stores/{id}")]
+        public IActionResult GetProductsStoreForImportOperationDetails(int id, int pageSize = 5, int pageNumber = 1)
+        {
+            var res = new Result<List<StoreProductForGetImportOperationVM>>();
+            if (pageSize <= 0 || pageNumber <= 0)
+            {
+                res.Meesage = "رقم الصفحة وعدد العناصر يجب أن يكونا أكبر من الصفر";
+                return BadRequest(res);
+            }
+            var products = _operationStoreProduct.GetAll
+                (
+                expression: e => e.OperationId == id,
+                includes: [e => e.Product, e => e.ToStore],
+                pageSize: pageSize, pageNumber: pageNumber
+                );
+            if (products == null)
+            {
+                res.Meesage = "لم يتم العثور على منتجات لهذه العمليه";
+                return BadRequest(res);
+            }
+            var data = products.Data.Select(e => new StoreProductForGetImportOperationVM
+            {
+                Id = e.OperationStoreProductId,
+                ProductId = e.ProductId,
+                ProductName = e.Product.Name,
+                ToStoreId = e.ToStoreId,
+                StoreName = e.ToStore.Name,
+                Quantity = e.Quantity,
+                Price = e.Product.PurchasePrice
+            }).ToList();
+            res.Data = data;
+            res.IsSuccess = true;
+            res.PageSize=pageSize;
+            res.Total = products.Total;
+            res.PageNumber=pageNumber;
             return Ok(res);
         }
     }

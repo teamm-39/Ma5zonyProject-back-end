@@ -72,7 +72,6 @@ namespace Ma5zonyProject
                 options.Password.RequireUppercase = true;
                 options.Password.RequireNonAlphanumeric = false;
             });
-
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
