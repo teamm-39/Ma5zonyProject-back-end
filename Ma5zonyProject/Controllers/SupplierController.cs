@@ -183,5 +183,14 @@ namespace Ma5zonyProject.Controllers
             res.IsSuccess= true;
             return Ok(res);
         }
+        [HttpGet("get-suppliers-for-operation")]
+        public IActionResult GetSuppliersForOperation()
+        {
+            var res=new Result<List<SupplierForOperation>>();
+            var suppliers = _supplier.GetSuppliersForOperation();
+            res.Data = suppliers;
+            res.IsSuccess = true;
+            return Ok(res);
+        }
     }
 }

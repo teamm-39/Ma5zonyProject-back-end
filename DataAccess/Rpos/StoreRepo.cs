@@ -1,6 +1,7 @@
 ﻿using DataAccess.Data;
 using DataAccess.IRepos;
 using Models.Models;
+using Models.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,6 +17,11 @@ namespace DataAccess.Rpos
         public StoreRepo(ApplicationDbContext context) : base(context)
         {
             _context = context;
+        }
+        public List<StoreForOperation> GetStoresForOperations()
+        {
+            var stores=_context.Stores.Where(e => e.IsDeleted == false).Select(e=>new StoreForOperation { StoreId=e.StoreId,StoreName=e.Name}).ToList();
+            return stores;
         }
     }
 }
