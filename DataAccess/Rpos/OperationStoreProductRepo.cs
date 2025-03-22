@@ -16,5 +16,10 @@ namespace DataAccess.Rpos
         {
             _context = context;
         }
+        public List<OperationStoreProduct> GetAllIds(int operationId)
+        {
+            var OPS=_context.OperationStoreProducts.Where(e=>e.OperationId == operationId).ToList();
+            return OPS;
+        }
     }
 }

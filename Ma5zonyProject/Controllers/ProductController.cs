@@ -45,6 +45,7 @@ namespace Ma5zonyProject.Controllers
                 SellingPrice = p.SellingPrice,
                 PurchasePrice = p.PurchasePrice,
                 MinLimit = p.MinLimit,
+                Quantity=p.Quantity
             }).ToList();
             res.IsSuccess=true;
             res.Total = products.Total;

@@ -117,11 +117,8 @@ namespace Ma5zonyProject.Controllers
                 var operationStoreProduct = new OperationStoreProduct() { ToStoreId = sp.ToStoreId, ProductId = sp.ProductId, OperationId = operationId, Quantity = sp.Quantity };
                 _operationStoreProduct.Create(operationStoreProduct);
                 _operationStoreProduct.commit();
-                getSupplier.NumOfDeal++;
-                _supplier.Edit(getSupplier);
-                _supplier.commit();
                 var getProduct = _product.GetOne(e => e.ProductId == sp.ProductId && e.IsDeleted == false);
-                getProduct.Quantity += sp.Quantity;
+                getProduct.Quantity = sp.Quantity + getProduct.Quantity;
                 _product.Edit(getProduct);
                 _product.commit();
                 var getStore = _store.GetOne(e => e.StoreId == sp.ToStoreId && e.IsDeleted == false);
@@ -137,6 +134,9 @@ namespace Ma5zonyProject.Controllers
                     _storeProduct.commit();
                 }
             }
+            getSupplier.NumOfDeal++;
+            _supplier.Edit(getSupplier);
+            _supplier.commit();
             res.IsSuccess = true;
             return Ok(res);
         }
@@ -193,9 +193,83 @@ namespace Ma5zonyProject.Controllers
             }).ToList();
             res.Data = data;
             res.IsSuccess = true;
-            res.PageSize=pageSize;
+            res.PageSize = pageSize;
             res.Total = products.Total;
-            res.PageNumber=pageNumber;
+            res.PageNumber = pageNumber;
+            return Ok(res);
+        }
+        [HttpPut("edit/{id}")]
+        public IActionResult Edit(int id, ImportOperationCreateVM operationVM)
+        {
+            var res = new Result<ImportOperationCreateVM>();
+            var operation = _operation.GetOne(e => e.OperationId == id && e.LookupOperationTypeId == StaticData.ImportOperation);
+            if (operation == null)
+            {
+                res.Meesage = "لم يتم العثور على العمليه";
+                return BadRequest(res);
+            }
+            var supplier = _supplier.GetOne(e => e.SupplierId == operationVM.SupplierId && e.IsDeleted == false);
+            if (supplier == null)
+            {
+                res.Meesage = "لم يتم العثور على المورد";
+                return BadRequest(res);
+            }
+            foreach (var sp in operationVM.SP)
+            {
+                var s = _store.GetOne(e => e.StoreId == sp.ToStoreId && e.IsDeleted == false);
+                if (s == null)
+                {
+                    res.Meesage = "يرجى ادخال المخازن بشكل صحيح";
+                    return BadRequest(res);
+                }
+                var p = _product.GetOne(e => e.ProductId == sp.ProductId && e.IsDeleted == false);
+                if (p == null)
+                {
+                    res.Meesage = "يرجى ادخال المنتجات بشكل صحيح";
+                    return BadRequest(res);
+                }
+            }
+            foreach (var i in _operationStoreProduct.GetAllIds(id))
+            {
+                var SP = _storeProduct.GetOne(e => e.ProductId == i.ProductId && e.StoreId == i.ToStoreId);
+                var s = _store.GetOne(e => e.StoreId == i.ToStoreId);
+                var p = _product.GetOne(e => e.ProductId == i.ProductId);
+                SP.Quantity = SP.Quantity - i.Quantity;
+                p.Quantity = p.Quantity - i.Quantity;
+                _operationStoreProduct.Delete(i.OperationStoreProductId);
+                _storeProduct.Edit(SP);
+                _product.Edit(p);
+            }
+            _storeProduct.commit();
+            _product.commit();
+            _operationStoreProduct.commit();
+            operation.TotalPrice = 0;
+            foreach (var sp in operationVM.SP)
+            {
+                var product = _product.GetOne(e => e.ProductId == sp.ProductId && e.IsDeleted == false);
+                var store = _store.GetOne(e => e.StoreId == sp.ToStoreId && e.IsDeleted == false);
+                var storeHasProduct = _storeProduct.GetOne(e => e.StoreId == sp.ToStoreId && e.ProductId == sp.ProductId && e.IsDeleted == false);
+                if (storeHasProduct != null)
+                {
+                    storeHasProduct.Quantity += sp.Quantity;
+                }
+                else
+                {
+                    var createStoreProduct = new StoreProducts() { ProductId = sp.ProductId, StoreId = sp.ToStoreId, Quantity = sp.Quantity };
+                    _storeProduct.Create(createStoreProduct);
+                }
+                product.Quantity = product.Quantity + sp.Quantity;
+                var OSP = new OperationStoreProduct() { OperationId = id, ToStoreId = sp.ToStoreId, ProductId = sp.ProductId, Quantity = sp.Quantity };
+                _operationStoreProduct.Create(OSP);
+                _product.Edit(product);
+                operation.TotalPrice = operation.TotalPrice + (sp.Quantity * product.PurchasePrice);
+            }
+            _operation.Edit(operation);
+            _operation.commit();
+            _product.commit();
+            _operationStoreProduct.commit();
+            _storeProduct.commit();
+            res.IsSuccess = true;
             return Ok(res);
         }
     }

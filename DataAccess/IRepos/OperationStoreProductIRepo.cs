@@ -9,6 +9,6 @@ namespace DataAccess.IRepos
 {
     public interface OperationStoreProductIRepo : IBaseRepo<OperationStoreProduct>
     {
-
+        public List<OperationStoreProduct> GetAllIds(int operationId);
     }
 }
