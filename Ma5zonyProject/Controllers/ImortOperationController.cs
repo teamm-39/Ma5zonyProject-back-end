@@ -156,6 +156,7 @@ namespace Ma5zonyProject.Controllers
                 DateTime = operation.DateTime,
                 UserName = operation.ApplicationUser.Name,
                 SupplierName = operation.Supplier.Name,
+                SupplierId=operation.SupplierId,
                 TotalPrice = operation.TotalPrice
             };
             res.Data = operationVM;
@@ -196,6 +197,35 @@ namespace Ma5zonyProject.Controllers
             res.PageSize = pageSize;
             res.Total = products.Total;
             res.PageNumber = pageNumber;
+            return Ok(res);
+        }
+        [HttpGet("details/get-products-to-stores-for-edit/{id}")]
+        public IActionResult GetProductsStoreForImportOperationEdit(int id)
+        {
+            var res = new Result<List<StoreProductForGetImportOperationVM>>();
+            var products = _operationStoreProduct.GetAllWithoutPagination
+                (
+                expression: e => e.OperationId == id && e.IsDeleted == false,
+                includes: [e => e.Product, e => e.ToStore]
+                );
+            if (products == null)
+            {
+                res.Meesage = "لم يتم العثور على منتجات لهذه العمليه";
+                return BadRequest(res);
+            }
+            var data = products.Select(e => new StoreProductForGetImportOperationVM
+            {
+                Id = e.OperationStoreProductId,
+                ProductId = e.ProductId,
+                ProductName = e.Product.Name,
+                ToStoreId = e.ToStoreId,
+                StoreName = e.ToStore.Name,
+                Quantity = e.Quantity,
+                Price = e.Product.PurchasePrice
+            }).ToList();
+            res.Data = data;
+            res.IsSuccess = true;
+            res.Total = products.Count();
             return Ok(res);
         }
         [HttpPut("edit/{id}")]
@@ -240,6 +270,7 @@ namespace Ma5zonyProject.Controllers
                 _storeProduct.Edit(SP);
                 _product.Edit(p);
             }
+            operation.SupplierId = operationVM.SupplierId;
             _storeProduct.commit();
             _product.commit();
             _operationStoreProduct.commit();
