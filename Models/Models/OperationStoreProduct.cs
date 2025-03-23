@@ -14,7 +14,7 @@ namespace Models.Models
         public int? FromStoreId { get; set; }
         public int? ToStoreId { get; set; }
         public int Quantity { get; set; }
-
+        public bool IsDeleted { get; set; }
         public Operation Operation { get; set; }
         public Product Product { get; set; }
         public Store FromStore { get; set; }

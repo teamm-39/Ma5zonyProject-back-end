@@ -51,7 +51,7 @@ namespace Ma5zonyProject.Controllers
             var data = _operation.GetAll(
                 pageSize: pageSize, pageNumber: pageNumber,
                 includes: [e => e.Supplier, e => e.ApplicationUser],
-                filters: filters);
+                filters: filters ,expression:e=>e.IsDeleted==false);
 
             var importsOperations = data?.Data?.Select(op => new ImportsVM
             {
@@ -122,7 +122,7 @@ namespace Ma5zonyProject.Controllers
                 _product.Edit(getProduct);
                 _product.commit();
                 var getStore = _store.GetOne(e => e.StoreId == sp.ToStoreId && e.IsDeleted == false);
-                var storeProduct = _storeProduct.GetOne(e => e.ProductId == getProduct.ProductId && e.StoreId == sp.ToStoreId && e.IsDeleted == false);
+                var storeProduct = _storeProduct.GetOne(e => e.ProductId == getProduct.ProductId && e.StoreId == sp.ToStoreId);
                 if (storeProduct != null)
                 {
                     storeProduct.Quantity += sp.Quantity;
@@ -144,7 +144,7 @@ namespace Ma5zonyProject.Controllers
         public IActionResult GetOPeration(int id)
         {
             var res = new Result<OperationVM>();
-            var operation = _operation.GetOne(e => e.OperationId == id && e.LookupOperationTypeId == StaticData.ImportOperation, includes: [e => e.ApplicationUser, e => e.Supplier]);
+            var operation = _operation.GetOne(e => e.OperationId == id&& e.IsDeleted==false && e.LookupOperationTypeId == StaticData.ImportOperation, includes: [e => e.ApplicationUser, e => e.Supplier]);
             if (operation == null)
             {
                 res.Meesage = "لم يتم العثور على هذه العمليه ";
@@ -172,7 +172,7 @@ namespace Ma5zonyProject.Controllers
             }
             var products = _operationStoreProduct.GetAll
                 (
-                expression: e => e.OperationId == id,
+                expression: e => e.OperationId == id && e.IsDeleted==false ,
                 includes: [e => e.Product, e => e.ToStore],
                 pageSize: pageSize, pageNumber: pageNumber
                 );
@@ -202,7 +202,7 @@ namespace Ma5zonyProject.Controllers
         public IActionResult Edit(int id, ImportOperationCreateVM operationVM)
         {
             var res = new Result<ImportOperationCreateVM>();
-            var operation = _operation.GetOne(e => e.OperationId == id && e.LookupOperationTypeId == StaticData.ImportOperation);
+            var operation = _operation.GetOne(e => e.OperationId == id && e.LookupOperationTypeId == StaticData.ImportOperation && e.IsDeleted==false);
             if (operation == null)
             {
                 res.Meesage = "لم يتم العثور على العمليه";
@@ -248,7 +248,7 @@ namespace Ma5zonyProject.Controllers
             {
                 var product = _product.GetOne(e => e.ProductId == sp.ProductId && e.IsDeleted == false);
                 var store = _store.GetOne(e => e.StoreId == sp.ToStoreId && e.IsDeleted == false);
-                var storeHasProduct = _storeProduct.GetOne(e => e.StoreId == sp.ToStoreId && e.ProductId == sp.ProductId && e.IsDeleted == false);
+                var storeHasProduct = _storeProduct.GetOne(e => e.StoreId == sp.ToStoreId && e.ProductId == sp.ProductId);
                 if (storeHasProduct != null)
                 {
                     storeHasProduct.Quantity += sp.Quantity;
@@ -270,6 +270,43 @@ namespace Ma5zonyProject.Controllers
             _operationStoreProduct.commit();
             _storeProduct.commit();
             res.IsSuccess = true;
+            return Ok(res);
+        }
+        [HttpDelete("delete/{id}")]
+        public IActionResult Delete(int id)
+        {
+            var res = new Result<OperationVM>();
+            var operation = _operation.GetOne(e => e.OperationId == id && e.IsDeleted == false &&e.LookupOperationTypeId==StaticData.ImportOperation);
+            if (operation == null)
+            {
+                res.Meesage = "لم يتم العثور على هذه العمليه";
+                return BadRequest(res);
+            }
+            var operationStoreProduct = _operationStoreProduct.GetAllIds(id);
+            foreach (var osp in operationStoreProduct)
+            {
+                var store = _store.GetOne(e => e.StoreId == osp.ToStoreId && e.IsDeleted == false);
+                var product = _product.GetOne(e => e.ProductId == osp.ProductId && e.IsDeleted == false);
+                var storeProduct = _storeProduct.GetOne(e => e.ProductId == osp.ProductId && e.StoreId == osp.ToStoreId);
+                if (storeProduct.Quantity < osp.Quantity)
+                {
+                    res.Meesage = $"لا يمكن حذف هذه العمليه لان كمية المنتج {product.Name} فى مخزن {store.Name} غير كافيه";
+                    return BadRequest(res);
+                }
+                storeProduct.Quantity = storeProduct.Quantity - osp.Quantity;
+                product.Quantity = product.Quantity - osp.Quantity;
+                osp.IsDeleted = true;
+                _storeProduct.Edit(storeProduct);
+                _product.Edit(product);
+                _operationStoreProduct.Edit(osp);
+            }
+            operation.IsDeleted = true;
+            _operation.Edit(operation);
+            _storeProduct.commit();
+            _product.commit();
+            _operationStoreProduct.commit();
+            _operation.commit();
+            res.IsSuccess=true;
             return Ok(res);
         }
     }

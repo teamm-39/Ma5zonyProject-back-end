@@ -116,7 +116,7 @@ namespace Ma5zonyProject.Controllers
                 return Ok(result);
             }
             result.Meesage = "لم يتم العثور على هذا العنصر";
-            return Ok(result);
+            return BadRequest(result);
         }
         [HttpGet("get-stores-for-operation")]
         public IActionResult GetStoresForOperation()
