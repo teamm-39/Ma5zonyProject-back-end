@@ -8,8 +8,8 @@ using Models.ViewModels;
 
 namespace DataAccess.IRepos
 {
-    public interface SupplierIRepo:IBaseRepo<Supplier>
+    public interface CustomerSupplierIRepo:IBaseRepo<CustomerSupplier>
     {
-        public List<SupplierForOperation> GetSuppliersForOperation();
+        public List<SupplierForOperation> GetSuppliersOrCustomersForOperation(int lkType);
     }
 }

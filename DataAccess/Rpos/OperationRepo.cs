@@ -24,10 +24,10 @@ namespace DataAccess.Rpos
             var operation = new Operation() { ApplicationUserId = userId, DateTime = DateTime.Now, LookupOperationTypeId = LkOperationType, TotalPrice=totalPrice };
             if (LkOperationType == StaticData.ImportOperation)
             {
-                operation.SupplierId= supplierOrCustomerId;
+                operation.CustomerSupplierId = supplierOrCustomerId;
             }else if (LkOperationType == StaticData.ExportOperation)
             {
-                operation.CustomerId= supplierOrCustomerId;
+                operation.CustomerSupplierId= supplierOrCustomerId;
             }
             _context.Add(operation);
             _context.SaveChanges();

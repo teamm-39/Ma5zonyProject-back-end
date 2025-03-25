@@ -4,6 +4,7 @@ using DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250325174256_delete-customer-table")]
+    partial class deletecustomertable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -261,9 +264,6 @@ namespace DataAccess.Migrations
                     b.Property<bool>("IsReliable")
                         .HasColumnType("bit");
 
-                    b.Property<int>("LookupCustomerSupplierTypeId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -277,26 +277,7 @@ namespace DataAccess.Migrations
 
                     b.HasKey("CustomerSupplierId");
 
-                    b.HasIndex("LookupCustomerSupplierTypeId");
-
-                    b.ToTable("CustomersSuppliers");
-                });
-
-            modelBuilder.Entity("Models.Models.LookupCustomerSupplierType", b =>
-                {
-                    b.Property<int>("LookupCustomerSupplierTypeId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("LookupCustomerSupplierTypeId"));
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("LookupCustomerSupplierTypeId");
-
-                    b.ToTable("LookupCustomerSupplierType");
+                    b.ToTable("Suppliers");
                 });
 
             modelBuilder.Entity("Models.Models.LookupOperationType", b =>
@@ -522,17 +503,6 @@ namespace DataAccess.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Models.Models.CustomerSupplier", b =>
-                {
-                    b.HasOne("Models.Models.LookupCustomerSupplierType", "LookupCustomerSupplierType")
-                        .WithMany("CustomerSuppliers")
-                        .HasForeignKey("LookupCustomerSupplierTypeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("LookupCustomerSupplierType");
-                });
-
             modelBuilder.Entity("Models.Models.Operation", b =>
                 {
                     b.HasOne("Models.Models.ApplicationUser", "ApplicationUser")
@@ -608,11 +578,6 @@ namespace DataAccess.Migrations
                     b.Navigation("Product");
 
                     b.Navigation("Store");
-                });
-
-            modelBuilder.Entity("Models.Models.LookupCustomerSupplierType", b =>
-                {
-                    b.Navigation("CustomerSuppliers");
                 });
 
             modelBuilder.Entity("Models.Models.LookupOperationType", b =>

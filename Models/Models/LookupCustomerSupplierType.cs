@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace Models.Models
 {
-    public class Customer
+    public class LookupCustomerSupplierType
     {
-        public int CustomerId { get; set; }
+        public int LookupCustomerSupplierTypeId { get; set; }
         public string Name { get; set; }
-        public string Address { get; set; }
+        public ICollection<CustomerSupplier> CustomerSuppliers { get; set; }
     }
 }

@@ -11,9 +11,9 @@ namespace Ma5zonyProject.Controllers
     [ApiController]
     public class SupplierController : ControllerBase
     {
-        private SupplierIRepo _supplier;
+        private CustomerSupplierIRepo _supplier;
 
-        public SupplierController(SupplierIRepo supplier)
+        public SupplierController(CustomerSupplierIRepo supplier)
         {
             _supplier = supplier;
         }
@@ -44,10 +44,10 @@ namespace Ma5zonyProject.Controllers
             if (isReliable.HasValue) filters.Add("IsReliable", isReliable.Value);
             if (age.HasValue && age > 0) filters.Add("Age", age);
             if (numOfDeal.HasValue && numOfDeal >= 0) filters.Add("NumOfDeal", numOfDeal);
-            var suppliers = _supplier.GetAll(pageNumber: pageNumber, pageSize: pageSize, filters: filters, expression: s => s.IsDeleted == false);
+            var suppliers = _supplier.GetAll(pageNumber: pageNumber, pageSize: pageSize, filters: filters, expression: s => s.IsDeleted == false&&s.LookupCustomerSupplierTypeId==1);
             res.Data = suppliers.Data?.Select(s => new SuppliersVM
             {
-                SupplierId = s.SupplierId,
+                SupplierId = s.CustomerSupplierId,
                 Name = s.Name,
                 Address = s.Address,
                 Age = s.Age,
@@ -88,7 +88,7 @@ namespace Ma5zonyProject.Controllers
                 res.Meesage = "البريد الالكترونى موجود بالفعل";
                 return BadRequest(res);
             }
-            var newSupplier = new Supplier()
+            var newSupplier = new CustomerSupplier()
             {
                 Name = supplierVM.Name,
                 Email = supplierVM.Email,
@@ -96,7 +96,8 @@ namespace Ma5zonyProject.Controllers
                 NumOfDeal = 0,
                 Address = supplierVM.Address,
                 PhoneNumber = supplierVM.PhoneNumber,
-                IsReliable = supplierVM.IsReliable
+                IsReliable = supplierVM.IsReliable,
+                LookupCustomerSupplierTypeId=1
             };
             _supplier.Create(newSupplier);
             _supplier.commit();
@@ -112,7 +113,7 @@ namespace Ma5zonyProject.Controllers
                 res.Meesage = "يرجى ادخال بيانات المنتج بشكل صحيح";
                 return BadRequest(res);
             }
-            var oldSupplier = _supplier.GetOne(e => e.SupplierId == supplierVM.SupplierId && e.IsDeleted == false);
+            var oldSupplier = _supplier.GetOne(e => e.CustomerSupplierId == supplierVM.SupplierId && e.IsDeleted == false && e.LookupCustomerSupplierTypeId == 1);
             if (oldSupplier == null)
             {
                 res.Meesage = "لم يتم العثور على هذا المورد";
@@ -123,13 +124,13 @@ namespace Ma5zonyProject.Controllers
                 res.Meesage = "عمر المورد يجب ان يكون اكبر من 17 سنه";
                 return BadRequest(res);
             }
-            var chekIfNameExists = _supplier.GetOne(e => e.Name == supplierVM.Name && e.SupplierId != supplierVM.SupplierId);
+            var chekIfNameExists = _supplier.GetOne(e => e.Name == supplierVM.Name && e.CustomerSupplierId != supplierVM.SupplierId && e.LookupCustomerSupplierTypeId == 1);
             if (chekIfNameExists != null)
             {
                 res.Meesage = "اسم المورد موجود بالفعل";
                 return BadRequest(res);
             }
-            var chekIfEmailExists = _supplier.GetOne(e => e.Email == supplierVM.Email && e.SupplierId != supplierVM.SupplierId);
+            var chekIfEmailExists = _supplier.GetOne(e => e.Email == supplierVM.Email && e.CustomerSupplierId != supplierVM.SupplierId && e.LookupCustomerSupplierTypeId == 1);
             if (chekIfEmailExists != null)
             {
                 res.Meesage = "البريد الالكترونى موجود بالفعل";
@@ -150,14 +151,14 @@ namespace Ma5zonyProject.Controllers
         public IActionResult GetOne(int id)
         {
             var res = new Result<SupplierVM>();
-            var supplier = _supplier.GetOne(e => e.SupplierId == id && e.IsDeleted == false);
+            var supplier = _supplier.GetOne(e => e.CustomerSupplierId == id && e.IsDeleted == false && e.LookupCustomerSupplierTypeId == 1);
             if (supplier == null)
             {
                 res.Meesage = "لم يتم العثور على هذا المورد";
                 return BadRequest(res);
             }
             var supplierVM = new SupplierVM() { 
-                SupplierId = supplier.SupplierId,
+                SupplierId = supplier.CustomerSupplierId,
                 Name = supplier.Name,
                 Email = supplier.Email,
                 Address = supplier.Address,
@@ -173,7 +174,7 @@ namespace Ma5zonyProject.Controllers
         [HttpDelete("delete/{id}")]
         public IActionResult Delete(int id) { 
         var res=new Result<SupplierVM>();
-            var supplier=_supplier.GetOne(e=>e.SupplierId==id&&e.IsDeleted== false);
+            var supplier=_supplier.GetOne(e=>e.CustomerSupplierId == id && e.IsDeleted == false && e.LookupCustomerSupplierTypeId == 1);
             if (supplier == null) {
                 res.Meesage = "لم يتم العثور على هذا المورد";
                 return BadRequest(res);
@@ -187,7 +188,7 @@ namespace Ma5zonyProject.Controllers
         public IActionResult GetSuppliersForOperation()
         {
             var res=new Result<List<SupplierForOperation>>();
-            var suppliers = _supplier.GetSuppliersForOperation();
+            var suppliers = _supplier.GetSuppliersOrCustomersForOperation(1);
             res.Data = suppliers;
             res.IsSuccess = true;
             return Ok(res);

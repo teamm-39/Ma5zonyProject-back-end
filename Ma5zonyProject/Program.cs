@@ -54,11 +54,11 @@ namespace Ma5zonyProject
                 .AddEntityFrameworkStores<ApplicationDbContext>();
 
             // Register Repositories
-            builder.Services.AddScoped<CustomerIRepo, CustomerRepo>();
+            builder.Services.AddScoped<CustomerSupplierIRepo, CustomerSupplierRepo>();
             builder.Services.AddScoped<ProductIRepo, ProductRepo>();
             builder.Services.AddScoped<StoreIRepo, StoreRepo>();
             builder.Services.AddScoped<OperationIRepo, OperationRepo>();
-            builder.Services.AddScoped<SupplierIRepo, SupplierRepo>();
+            builder.Services.AddScoped<CustomerSupplierIRepo, CustomerSupplierRepo>();
             builder.Services.AddScoped<StoreProductIRepo, StoreProductRepo>();
             builder.Services.AddScoped<ApplicationUserIRepo, ApplicationUserRepo>();
             builder.Services.AddScoped<OperationStoreProductIRepo, OperationStoreProductRepo>();

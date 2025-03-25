@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace Models.Models
 {
-    public class Supplier
+    public class CustomerSupplier
     {
-        public int SupplierId { get; set; }
+        public int CustomerSupplierId { get; set; }
         public string Name { get; set; }
         public string Email { get; set; }
         public int Age { get; set; }
@@ -17,5 +17,7 @@ namespace Models.Models
         public int NumOfDeal { get; set; }
         public bool IsReliable { get; set; }
         public bool IsDeleted { get; set; }
+        public int LookupCustomerSupplierTypeId { get; set; }
+        public LookupCustomerSupplierType LookupCustomerSupplierType { get; set; }
     }
 }

@@ -10,12 +10,11 @@ namespace DataAccess.Data
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
         }
-        public DbSet<Customer> Customers { get; set; }
         public DbSet<Operation> Operations { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<Store> Stores { get; set; }
         public DbSet<StoreProducts> StoresProducts { get; set; }
-        public DbSet<Supplier> Suppliers { get; set; }
+        public DbSet<CustomerSupplier> CustomersSuppliers { get; set; }
         public DbSet<LookupOperationType> LookupOperationTypes { get; set; }
         public DbSet<OperationStoreProduct> OperationStoreProducts { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)

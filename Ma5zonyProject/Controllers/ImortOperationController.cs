@@ -16,8 +16,8 @@ namespace Ma5zonyProject.Controllers
         private ProductIRepo _product;
         private OperationStoreProductIRepo _operationStoreProduct;
         private StoreProductIRepo _storeProduct;
-        private SupplierIRepo _supplier;
-        public ImortOperationController(OperationIRepo operation, OperationStoreProductIRepo operationStoreProduct, StoreIRepo store, ProductIRepo product, StoreProductIRepo storeProduct, SupplierIRepo supplier)
+        private CustomerSupplierIRepo _supplier;
+        public ImortOperationController(OperationIRepo operation, OperationStoreProductIRepo operationStoreProduct, StoreIRepo store, ProductIRepo product, StoreProductIRepo storeProduct, CustomerSupplierIRepo supplier)
         {
             _operation = operation;
             _operationStoreProduct = operationStoreProduct;
@@ -46,11 +46,11 @@ namespace Ma5zonyProject.Controllers
                 filters.Add("DateTime", dateTime.Value);
 
             if (!string.IsNullOrWhiteSpace(supplierName))
-                filters.Add("Supplier.Name", supplierName);
+                filters.Add("CustomerSupplier.Name", supplierName);
 
             var data = _operation.GetAll(
                 pageSize: pageSize, pageNumber: pageNumber,
-                includes: [e => e.Supplier, e => e.ApplicationUser],
+                includes: [e => e.CustomerSupplier, e => e.ApplicationUser],
                 filters: filters ,expression:e=>e.IsDeleted==false);
 
             var importsOperations = data?.Data?.Select(op => new ImportsVM
@@ -59,7 +59,7 @@ namespace Ma5zonyProject.Controllers
                 DateTime = op.DateTime,
                 TotalPrice = op.TotalPrice ?? 0,
                 UserName = op.ApplicationUser.Name,
-                SupplierName = op.Supplier.Name
+                SupplierName = op.CustomerSupplier.Name
             }).ToList();
             res.Data = importsOperations;
             res.IsSuccess = true;
@@ -83,7 +83,7 @@ namespace Ma5zonyProject.Controllers
                 res.Meesage = "يرجى تسجيل الدخول اولا";
                 return BadRequest(res);
             }
-            var getSupplier = _supplier.GetOne(e => e.SupplierId == importOperation.SupplierId && e.IsDeleted == false);
+            var getSupplier = _supplier.GetOne(e => e.CustomerSupplierId == importOperation.SupplierId && e.IsDeleted == false&&e.LookupCustomerSupplierTypeId==1);
             if (getSupplier == null)
             {
                 res.Meesage = "يرجى ادخال المورد بشكل صحيح";
@@ -144,7 +144,7 @@ namespace Ma5zonyProject.Controllers
         public IActionResult GetOPeration(int id)
         {
             var res = new Result<OperationVM>();
-            var operation = _operation.GetOne(e => e.OperationId == id&& e.IsDeleted==false && e.LookupOperationTypeId == StaticData.ImportOperation, includes: [e => e.ApplicationUser, e => e.Supplier]);
+            var operation = _operation.GetOne(e => e.OperationId == id&& e.IsDeleted==false && e.LookupOperationTypeId == StaticData.ImportOperation, includes: [e => e.ApplicationUser, e => e.CustomerSupplier]);
             if (operation == null)
             {
                 res.Meesage = "لم يتم العثور على هذه العمليه ";
@@ -155,8 +155,8 @@ namespace Ma5zonyProject.Controllers
                 OperationId = operation.OperationId,
                 DateTime = operation.DateTime,
                 UserName = operation.ApplicationUser.Name,
-                SupplierName = operation.Supplier.Name,
-                SupplierId=operation.SupplierId,
+                SupplierName = operation.CustomerSupplier.Name,
+                SupplierId=operation.CustomerSupplierId,
                 TotalPrice = operation.TotalPrice
             };
             res.Data = operationVM;
@@ -238,7 +238,7 @@ namespace Ma5zonyProject.Controllers
                 res.Meesage = "لم يتم العثور على العمليه";
                 return BadRequest(res);
             }
-            var supplier = _supplier.GetOne(e => e.SupplierId == operationVM.SupplierId && e.IsDeleted == false);
+            var supplier = _supplier.GetOne(e => e.CustomerSupplierId == operationVM.SupplierId && e.IsDeleted == false && e.LookupCustomerSupplierTypeId == 1);
             if (supplier == null)
             {
                 res.Meesage = "لم يتم العثور على المورد";
@@ -270,7 +270,7 @@ namespace Ma5zonyProject.Controllers
                 _storeProduct.Edit(SP);
                 _product.Edit(p);
             }
-            operation.SupplierId = operationVM.SupplierId;
+            operation.CustomerSupplierId = operationVM.SupplierId;
             _storeProduct.commit();
             _product.commit();
             _operationStoreProduct.commit();
@@ -313,6 +313,11 @@ namespace Ma5zonyProject.Controllers
                 res.Meesage = "لم يتم العثور على هذه العمليه";
                 return BadRequest(res);
             }
+            var supplier = _supplier.GetOne(e => e.CustomerSupplierId == operation.CustomerSupplierId && e.IsDeleted == false && e.LookupCustomerSupplierTypeId == 1);
+            if (supplier == null) {
+                res.Meesage = "لم يتم العثور على مورد هذه العمليه";
+                return BadRequest(res);
+            }
             var operationStoreProduct = _operationStoreProduct.GetAllIds(id);
             foreach (var osp in operationStoreProduct)
             {
@@ -331,6 +336,9 @@ namespace Ma5zonyProject.Controllers
                 _product.Edit(product);
                 _operationStoreProduct.Edit(osp);
             }
+            supplier.NumOfDeal--;
+            _supplier.Edit(supplier);
+            _supplier.commit();
             operation.IsDeleted = true;
             _operation.Edit(operation);
             _storeProduct.commit();
