@@ -7,8 +7,9 @@ using System.Threading.Tasks;
 
 namespace Models.ViewModels
 {
-    public class SupplierCreateVM
+    public class CustomerSupplierEditVM
     {
+        public int CustomerSupplierId { get; set; }
         public string Name { get; set; }
         public int Age { get; set; }
         [EmailAddress(ErrorMessage = "البريد الإلكتروني غير صالح")]
