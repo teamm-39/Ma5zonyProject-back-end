@@ -6,15 +6,12 @@ using System.Threading.Tasks;
 
 namespace Models.ViewModels
 {
-    public class OperationVM
+    public class ExportsVM
     {
         public int OperationId { get; set; }
         public DateTime DateTime { get; set; }
-        public int? SupplierId { get; set; }
-        public string? SupplierName { get; set; }
-        public int? CustomerId { get; set; }
-        public string? CustomerName { get; set; }
         public string UserName { get; set; }
-        public double? TotalPrice { get; set; }
+        public double TotalPrice { get; set; }
+        public string CustomerName { get; set; }
     }
 }

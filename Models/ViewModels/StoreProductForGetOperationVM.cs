@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Models.ViewModels
 {
-    public class StoreProductForGetImportOperationVM
+    public class StoreProductForGetOperationVM
     {
         public int Id { get; set; }
         public int ProductId { get; set; }
@@ -14,6 +14,7 @@ namespace Models.ViewModels
         public double Price { get; set; }
         public int Quantity { get; set; }
         public int? ToStoreId { get; set; }
+        public int? FromStoreId { get; set; }
         public string StoreName { get; set; }
     }
 }

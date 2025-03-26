@@ -121,11 +121,12 @@ namespace Ma5zonyProject.Controllers
                 getProduct.Quantity = sp.Quantity + getProduct.Quantity;
                 _product.Edit(getProduct);
                 _product.commit();
-                var getStore = _store.GetOne(e => e.StoreId == sp.ToStoreId && e.IsDeleted == false);
                 var storeProduct = _storeProduct.GetOne(e => e.ProductId == getProduct.ProductId && e.StoreId == sp.ToStoreId);
                 if (storeProduct != null)
                 {
                     storeProduct.Quantity += sp.Quantity;
+                    _storeProduct.Edit(storeProduct);
+                    _storeProduct.commit();
                 }
                 else
                 {
@@ -156,7 +157,7 @@ namespace Ma5zonyProject.Controllers
                 DateTime = operation.DateTime,
                 UserName = operation.ApplicationUser.Name,
                 SupplierName = operation.CustomerSupplier.Name,
-                SupplierId=operation.CustomerSupplierId,
+                CustomerId=operation.CustomerSupplierId,
                 TotalPrice = operation.TotalPrice
             };
             res.Data = operationVM;
@@ -165,7 +166,7 @@ namespace Ma5zonyProject.Controllers
         [HttpGet("details/get-products-to-stores/{id}")]
         public IActionResult GetProductsStoreForImportOperationDetails(int id, int pageSize = 5, int pageNumber = 1)
         {
-            var res = new Result<List<StoreProductForGetImportOperationVM>>();
+            var res = new Result<List<StoreProductForGetOperationVM>>();
             if (pageSize <= 0 || pageNumber <= 0)
             {
                 res.Meesage = "رقم الصفحة وعدد العناصر يجب أن يكونا أكبر من الصفر";
@@ -182,7 +183,7 @@ namespace Ma5zonyProject.Controllers
                 res.Meesage = "لم يتم العثور على منتجات لهذه العمليه";
                 return BadRequest(res);
             }
-            var data = products.Data.Select(e => new StoreProductForGetImportOperationVM
+            var data = products.Data.Select(e => new StoreProductForGetOperationVM
             {
                 Id = e.OperationStoreProductId,
                 ProductId = e.ProductId,
@@ -202,7 +203,7 @@ namespace Ma5zonyProject.Controllers
         [HttpGet("details/get-products-to-stores-for-edit/{id}")]
         public IActionResult GetProductsStoreForImportOperationEdit(int id)
         {
-            var res = new Result<List<StoreProductForGetImportOperationVM>>();
+            var res = new Result<List<StoreProductForGetOperationVM>>();
             var products = _operationStoreProduct.GetAllWithoutPagination
                 (
                 expression: e => e.OperationId == id && e.IsDeleted == false,
@@ -213,7 +214,7 @@ namespace Ma5zonyProject.Controllers
                 res.Meesage = "لم يتم العثور على منتجات لهذه العمليه";
                 return BadRequest(res);
             }
-            var data = products.Select(e => new StoreProductForGetImportOperationVM
+            var data = products.Select(e => new StoreProductForGetOperationVM
             {
                 Id = e.OperationStoreProductId,
                 ProductId = e.ProductId,

@@ -8,7 +8,6 @@ using Utility;
 
 namespace Ma5zonyProject.Controllers
 {
-    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class CustomerController : ControllerBase
@@ -106,7 +105,31 @@ namespace Ma5zonyProject.Controllers
             res.IsSuccess = true;
             return Ok(res);
         }
-
+        [HttpGet("details/{id}")]
+        public IActionResult GetOne(int id)
+        {
+            var res = new Result<CustomerSupplierVM>();
+            var supplier = _customer.GetOne(e => e.CustomerSupplierId == id && e.IsDeleted == false && e.LookupCustomerSupplierTypeId == 2);
+            if (supplier == null)
+            {
+                res.Meesage = "لم يتم العثور على هذا المورد";
+                return BadRequest(res);
+            }
+            var supplierVM = new CustomerSupplierVM()
+            {
+                CustomerSupplierId = supplier.CustomerSupplierId,
+                Name = supplier.Name,
+                Email = supplier.Email,
+                Address = supplier.Address,
+                Age = supplier.Age,
+                IsReliable = supplier.IsReliable,
+                PhoneNumber = supplier.PhoneNumber,
+                NumOfDeal = supplier.NumOfDeal
+            };
+            res.Data = supplierVM;
+            res.IsSuccess = true;
+            return Ok(res);
+        }
         [HttpPut("edit")]
         public IActionResult Edit(CustomerSupplierEditVM customerVM)
         {
