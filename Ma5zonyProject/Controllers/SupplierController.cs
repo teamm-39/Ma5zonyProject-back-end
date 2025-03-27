@@ -179,7 +179,8 @@ namespace Ma5zonyProject.Controllers
                 res.Meesage = "لم يتم العثور على هذا المورد";
                 return BadRequest(res);
             }
-            _supplier.Delete(id);
+            supplier.IsDeleted= true;
+            _supplier.Edit(supplier);
             _supplier.commit();
             res.IsSuccess= true;
             return Ok(res);

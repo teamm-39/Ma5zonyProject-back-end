@@ -183,7 +183,8 @@ namespace Ma5zonyProject.Controllers
                 res.Meesage = "لم يتم العثور على هذا المورد";
                 return BadRequest(res);
             }
-            _customer.Delete(id);
+            customer.IsDeleted= true;
+            _customer.Edit(customer);
             _customer.commit();
             res.IsSuccess = true;
             return Ok(res);

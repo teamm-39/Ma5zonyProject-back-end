@@ -276,6 +276,10 @@ namespace Ma5zonyProject.Controllers
                 _storeProduct.Edit(SP);
                 _product.Edit(p);
             }
+            var oldCustomer= _customer.GetOne(e=>e.CustomerSupplierId==operation.CustomerSupplierId);
+            oldCustomer.NumOfDeal--;
+            _customer.Edit(oldCustomer);
+            _customer.commit();
             operation.CustomerSupplierId = operationVM.CustomerId;
             _storeProduct.commit();
             _product.commit();
@@ -306,6 +310,9 @@ namespace Ma5zonyProject.Controllers
                 _product.Edit(product);
                 operation.TotalPrice = operation.TotalPrice + (sp.Quantity * product.SellingPrice);
             }
+            customer.NumOfDeal++;
+            _customer.Edit(customer);
+            _customer.commit();
             _operation.Edit(operation);
             _operation.commit();
             _product.commit();
