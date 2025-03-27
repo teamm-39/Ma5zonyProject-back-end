@@ -17,10 +17,19 @@ namespace DataAccess.Rpos
         {
             _context = context;
         }
-        public List<ProductForOperation> GetProductsForOperations()
+        public List<ProductForOperation>? GetProductsForOperations(int opType)
         {
-            var products = _context.Products.Where(e=>e.IsDeleted==false).Select(e => new ProductForOperation { ProductId = e.ProductId, ProductName = e.Name,Price=e.PurchasePrice }).ToList();
+            if (opType == 1)
+            {
+                var products = _context.Products.Where(e => e.IsDeleted == false).Select(e => new ProductForOperation { ProductId = e.ProductId, ProductName = e.Name, Price = e.PurchasePrice }).ToList();
             return products;
+            }
+            else if (opType == 2)
+            {
+                var products = _context.Products.Where(e => e.IsDeleted == false).Select(e => new ProductForOperation { ProductId = e.ProductId, ProductName = e.Name, Price = e.SellingPrice }).ToList();
+                return products;
+            }
+            return null;
         }
     }
 }

@@ -171,11 +171,19 @@ namespace Ma5zonyProject.Controllers
             res.Meesage = "تم حذف المنتج بنجاح";
             return Ok(res);
         }
-        [HttpGet("get-products-for-operation")]
-        public IActionResult GetProductsForOperations()
+        [HttpGet("get-products-for-import-operation")]
+        public IActionResult GetProductsForImportOperations()
         {
             var res = new Result<List<ProductForOperation>>();
-            res.Data = _product.GetProductsForOperations();
+            res.Data = _product.GetProductsForOperations(1);
+            res.IsSuccess = true;
+            return Ok(res);
+        }
+        [HttpGet("get-products-for-export-operation")]
+        public IActionResult GetProductsForExportOperations()
+        {
+            var res = new Result<List<ProductForOperation>>();
+            res.Data = _product.GetProductsForOperations(2);
             res.IsSuccess = true;
             return Ok(res);
         }

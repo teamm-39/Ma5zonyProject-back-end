@@ -157,7 +157,7 @@ namespace Ma5zonyProject.Controllers
                 DateTime = operation.DateTime,
                 UserName = operation.ApplicationUser.Name,
                 SupplierName = operation.CustomerSupplier.Name,
-                CustomerId=operation.CustomerSupplierId,
+                SupplierId=operation.CustomerSupplierId,
                 TotalPrice = operation.TotalPrice
             };
             res.Data = operationVM;

@@ -10,6 +10,6 @@ namespace DataAccess.IRepos
 {
     public interface CustomerSupplierIRepo:IBaseRepo<CustomerSupplier>
     {
-        public List<SupplierForOperation> GetSuppliersOrCustomersForOperation(int lkType);
+        public List<SupplierOrCustomerForOperation> GetSuppliersOrCustomersForOperation(int lkType);
     }
 }

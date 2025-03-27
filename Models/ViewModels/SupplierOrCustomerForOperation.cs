@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace Models.ViewModels
 {
-    public class SupplierForOperation
+    public class SupplierOrCustomerForOperation
     {
-        public int SupplierId { get; set; }
-        public string SupplierName { get; set; }
+        public int Id { get; set; }
+        public string Name { get; set; }
     }
 }

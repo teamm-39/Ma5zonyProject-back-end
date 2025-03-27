@@ -17,9 +17,9 @@ namespace DataAccess.Rpos
         {
             _context = context;
         }
-        public List<SupplierForOperation> GetSuppliersOrCustomersForOperation(int lkType)
+        public List<SupplierOrCustomerForOperation> GetSuppliersOrCustomersForOperation(int lkType)
         {
-            var suppliers= _context.CustomersSuppliers.Where(e => e.IsDeleted == false&&e.LookupCustomerSupplierTypeId==lkType).Select(s=>new SupplierForOperation { SupplierId=s.CustomerSupplierId,SupplierName=s.Name }).ToList();
+            var suppliers= _context.CustomersSuppliers.Where(e => e.IsDeleted == false&&e.LookupCustomerSupplierTypeId==lkType).Select(s=>new SupplierOrCustomerForOperation { Id=s.CustomerSupplierId,Name=s.Name }).ToList();
             return suppliers;
         }
     }

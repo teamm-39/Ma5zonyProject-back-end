@@ -10,6 +10,7 @@ namespace DataAccess.IRepos
 {
     public interface ProductIRepo : IBaseRepo<Product>
     {
-        public List<ProductForOperation> GetProductsForOperations();
+        public List<ProductForOperation>? GetProductsForOperations(int opType);
+
     }
 }

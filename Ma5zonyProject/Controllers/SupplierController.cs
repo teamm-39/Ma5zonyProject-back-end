@@ -187,7 +187,7 @@ namespace Ma5zonyProject.Controllers
         [HttpGet("get-suppliers-for-operation")]
         public IActionResult GetSuppliersForOperation()
         {
-            var res=new Result<List<SupplierForOperation>>();
+            var res=new Result<List<SupplierOrCustomerForOperation>>();
             var suppliers = _supplier.GetSuppliersOrCustomersForOperation(1);
             res.Data = suppliers;
             res.IsSuccess = true;
