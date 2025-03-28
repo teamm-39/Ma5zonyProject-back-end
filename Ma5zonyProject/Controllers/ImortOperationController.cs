@@ -321,7 +321,7 @@ namespace Ma5zonyProject.Controllers
                 res.Meesage = "لم يتم العثور على هذه العمليه";
                 return BadRequest(res);
             }
-            var supplier = _supplier.GetOne(e => e.CustomerSupplierId == operation.CustomerSupplierId && e.IsDeleted == false && e.LookupCustomerSupplierTypeId == 1);
+            var supplier = _supplier.GetOne(e => e.CustomerSupplierId == operation.CustomerSupplierId && e.LookupCustomerSupplierTypeId == 1);
             if (supplier == null) {
                 res.Meesage = "لم يتم العثور على مورد هذه العمليه";
                 return BadRequest(res);

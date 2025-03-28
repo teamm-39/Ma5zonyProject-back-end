@@ -261,6 +261,7 @@ namespace Ma5zonyProject.Controllers
                 _storeProduct.Edit(sp);
                 _operationStoreProduct.Delete(i.OperationStoreProductId);
             }
+            operation.TotalPrice = 0;
             foreach (var i in operationVM.SP)
             {
                 var p = _product.GetOne(e => e.ProductId == i.ProductId && e.IsDeleted == false);
@@ -292,13 +293,16 @@ namespace Ma5zonyProject.Controllers
                 _operationStoreProduct.Create(ops);
                 _product.Edit(p);
                 _storeProduct.Edit(sp);
+                operation.TotalPrice = (i.Quantity * p.SellingPrice) + operation.TotalPrice;
             }
             var oldCustomer=_customer.GetOne(e=>e.CustomerSupplierId==operation.CustomerSupplierId);
+            operation.CustomerSupplierId = operationVM.CustomerId;
             oldCustomer.NumOfDeal--;
             _customer.Edit(oldCustomer);
             customer.NumOfDeal++;
             _customer.Edit(customer);
-
+            _operation.Edit(operation);
+            _operation.commit();
             _product.commit();
             _storeProduct.commit();
             _operationStoreProduct.commit();
@@ -316,13 +320,14 @@ namespace Ma5zonyProject.Controllers
                 res.Meesage = "لم يتم العثور على هذه العمليه";
                 return BadRequest(res);
             }
-            var customer = _customer.GetOne(e => e.CustomerSupplierId == operation.CustomerSupplierId && e.IsDeleted == false && e.LookupCustomerSupplierTypeId == 2);
+            var customer = _customer.GetOne(e => e.CustomerSupplierId == operation.CustomerSupplierId && e.LookupCustomerSupplierTypeId == 2);
             if (customer == null)
             {
                 res.Meesage = "لم يتم العثور على عميل هذه العمليه";
                 return BadRequest(res);
             }
             var operationStoreProduct = _operationStoreProduct.GetAllIds(id);
+            
             foreach (var osp in operationStoreProduct)
             {
                 var store = _store.GetOne(e => e.StoreId == osp.ToStoreId && e.IsDeleted == false);
