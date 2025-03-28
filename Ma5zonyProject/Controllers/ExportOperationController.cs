@@ -250,74 +250,59 @@ namespace Ma5zonyProject.Controllers
                 res.Meesage = "لم يتم العثور على العميل";
                 return BadRequest(res);
             }
-            foreach (var sp in operationVM.SP)
+            var opsIds = _operationStoreProduct.GetAllIds(id);
+            foreach (var i in opsIds)
             {
-                var s = _store.GetOne(e => e.StoreId == sp.FromStoreId && e.IsDeleted == false);
+                var p = _product.GetOne(e => e.ProductId == i.ProductId && e.IsDeleted == false);
+                var sp = _storeProduct.GetOne(e => e.ProductId == i.ProductId && e.StoreId == i.FromStoreId);
+                p.Quantity = p.Quantity + i.Quantity;
+                sp.Quantity = sp.Quantity + i.Quantity;
+                _product.Edit(p);
+                _storeProduct.Edit(sp);
+                _operationStoreProduct.Delete(i.OperationStoreProductId);
+            }
+            foreach (var i in operationVM.SP)
+            {
+                var p = _product.GetOne(e => e.ProductId == i.ProductId && e.IsDeleted == false);
+                if (p == null)
+                {
+                    res.Meesage ="يرجى ادخال المنتجات بشكل صحيح";
+                    return BadRequest(res);
+                }
+                var s = _store.GetOne(e => e.StoreId == i.FromStoreId && e.IsDeleted == false);
                 if (s == null)
                 {
                     res.Meesage = "يرجى ادخال المخازن بشكل صحيح";
                     return BadRequest(res);
                 }
-                var p = _product.GetOne(e => e.ProductId == sp.ProductId && e.IsDeleted == false);
-                if (p == null)
+                var sp = _storeProduct.GetOne(e => e.ProductId == i.ProductId && e.StoreId == i.FromStoreId);
+                if (sp == null)
                 {
-                    res.Meesage = "يرجى ادخال المنتجات بشكل صحيح";
+                    res.Meesage = $"المخزن {s.Name} لا يحتوى على منتج من نوع {p.Name}";
                     return BadRequest(res);
                 }
-            }
-            foreach (var i in _operationStoreProduct.GetAllIds(id))
-            {
-                var SP = _storeProduct.GetOne(e => e.ProductId == i.ProductId && e.StoreId == i.FromStoreId);
-                var s = _store.GetOne(e => e.StoreId == i.FromStoreId);
-                var p = _product.GetOne(e => e.ProductId == i.ProductId);
-                SP.Quantity = SP.Quantity + i.Quantity;
-                p.Quantity = p.Quantity + i.Quantity;
-                _operationStoreProduct.Delete(i.OperationStoreProductId);
-                _storeProduct.Edit(SP);
+                else if (sp.Quantity < i.Quantity)
+                {
+                    res.Meesage = $"كمية المنتج {p.Name} غير كافيه فى مخزن {s.Name}";
+                    return BadRequest(res);
+                }
+                var ops=new OperationStoreProduct { OperationId=operation.OperationId, ProductId=i.ProductId,FromStoreId=i.FromStoreId,Quantity=i.Quantity};
+                p.Quantity = p.Quantity - i.Quantity;
+                sp.Quantity = sp.Quantity - i.Quantity;
+                _operationStoreProduct.Create(ops);
                 _product.Edit(p);
+                _storeProduct.Edit(sp);
             }
-            var oldCustomer= _customer.GetOne(e=>e.CustomerSupplierId==operation.CustomerSupplierId);
+            var oldCustomer=_customer.GetOne(e=>e.CustomerSupplierId==operation.CustomerSupplierId);
             oldCustomer.NumOfDeal--;
             _customer.Edit(oldCustomer);
-            _customer.commit();
-            operation.CustomerSupplierId = operationVM.CustomerId;
-            _storeProduct.commit();
-            _product.commit();
-            _operationStoreProduct.commit();
-            operation.TotalPrice = 0;
-            foreach (var sp in operationVM.SP)
-            {
-                var product = _product.GetOne(e => e.ProductId == sp.ProductId && e.IsDeleted == false);
-                var store = _store.GetOne(e => e.StoreId == sp.FromStoreId && e.IsDeleted == false);
-                var storeHasProduct = _storeProduct.GetOne(e => e.StoreId == sp.FromStoreId && e.ProductId == sp.ProductId);
-                if (storeHasProduct != null && storeHasProduct.Quantity >= sp.Quantity)
-                {
-                    storeHasProduct.Quantity -= sp.Quantity;
-                }
-                else if (storeHasProduct.Quantity < sp.Quantity)
-                {
-                    res.Meesage = $"كمية المنتج {product.Name} غير كافيه فى مخزن {store.Name}";
-                    return BadRequest(res);
-                }
-                else
-                {
-                    res.Meesage = $"لا يوجد منتجات من نوع {product.Name} فى مخزن {store.Name}";
-                    return BadRequest(res);
-                }
-                product.Quantity = product.Quantity - sp.Quantity;
-                var OSP = new OperationStoreProduct() { OperationId = id, FromStoreId = sp.FromStoreId, ProductId = sp.ProductId, Quantity = sp.Quantity };
-                _operationStoreProduct.Create(OSP);
-                _product.Edit(product);
-                operation.TotalPrice = operation.TotalPrice + (sp.Quantity * product.SellingPrice);
-            }
             customer.NumOfDeal++;
             _customer.Edit(customer);
-            _customer.commit();
-            _operation.Edit(operation);
-            _operation.commit();
+
             _product.commit();
-            _operationStoreProduct.commit();
             _storeProduct.commit();
+            _operationStoreProduct.commit();
+            _customer.commit();
             res.IsSuccess = true;
             return Ok(res);
         }
