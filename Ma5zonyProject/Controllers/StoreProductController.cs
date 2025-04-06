@@ -8,7 +8,6 @@ using Utility;
 
 namespace Ma5zonyProject.Controllers
 {
-    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class StoreProductController : ControllerBase
