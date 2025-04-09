@@ -62,6 +62,7 @@ namespace Ma5zonyProject
             builder.Services.AddScoped<StoreProductIRepo, StoreProductRepo>();
             builder.Services.AddScoped<ApplicationUserIRepo, ApplicationUserRepo>();
             builder.Services.AddScoped<OperationStoreProductIRepo, OperationStoreProductRepo>();
+            builder.Services.AddScoped<StoreLogIRepo, StoreLogRepo >();
 
             // Configure Identity Options
             builder.Services.Configure<IdentityOptions>(options =>

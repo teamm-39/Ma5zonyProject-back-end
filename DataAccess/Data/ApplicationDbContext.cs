@@ -17,6 +17,7 @@ namespace DataAccess.Data
         public DbSet<CustomerSupplier> CustomersSuppliers { get; set; }
         public DbSet<LookupOperationType> LookupOperationTypes { get; set; }
         public DbSet<OperationStoreProduct> OperationStoreProducts { get; set; }
+        public DbSet<StoreLog> StoreLogs { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);

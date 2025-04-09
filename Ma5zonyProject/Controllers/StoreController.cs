@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Models.Models;
 using Models.ViewModels;
+using System.Security.Claims;
 using Utility;
 
 namespace Ma5zonyProject.Controllers
@@ -14,10 +15,11 @@ namespace Ma5zonyProject.Controllers
     public class StoreController : ControllerBase
     {
         private StoreIRepo _store;
-
-        public StoreController(StoreIRepo store)
+        private StoreLogIRepo _log;
+        public StoreController(StoreIRepo store,StoreLogIRepo log)
         {
             _store = store;
+            _log = log;
         }
         [HttpGet]
         public IActionResult GetAll(int pageSize = 5, int pageNumber = 1, string? name = null, string? country = null, string? city = null)
@@ -65,6 +67,7 @@ namespace Ma5zonyProject.Controllers
         public IActionResult Create(StoreCreateVM storeVM)
         {
             var result = new Result<StoreCreateVM>();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (ModelState.IsValid)
             {
                 Store newStore = new Store { Name = storeVM.Name, Country = storeVM.Country, City = storeVM.City };
@@ -72,6 +75,7 @@ namespace Ma5zonyProject.Controllers
                 _store.commit();
                 result.IsSuccess = true;
                 result.Meesage = "تم انشاء المخزن بنجاح";
+                _log.CreateOperationLog(oldStore:null,newStore: newStore, operationType: StaticData.AddOperationType, userId: userId);
                 return Ok(result);
             }
             result.Data = storeVM;
