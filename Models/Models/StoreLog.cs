@@ -17,6 +17,7 @@ namespace Models.Models
         public string NewCountry { get; set; }
         public string NewCity { get; set; }
         public string Message   { get; set; }
+        public DateTime DateTime { get; set; }
         public int LookupOperationTypeId { get; set; }
 
         public LookupOperationType LookupOperationType { get; set; }

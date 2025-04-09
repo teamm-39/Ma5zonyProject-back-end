@@ -32,6 +32,7 @@ namespace DataAccess.Rpos
                 storeLog = new StoreLog { ApplicationUserId = userId, OldName = oldStore.Name, OldCountry = oldStore.Country, OldCity = oldStore.City, NewName = "-", NewCountry = "-", NewCity = "-", Message = "تم حذف المخزن" };
             }
             storeLog.LookupOperationTypeId = operationType;
+            storeLog.DateTime=DateTime.Now;
             _context.StoreLogs.Add(storeLog);
             _context.SaveChanges();
         }

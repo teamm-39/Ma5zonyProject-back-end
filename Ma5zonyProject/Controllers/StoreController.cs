@@ -1,6 +1,8 @@
 ﻿using DataAccess.IRepos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Models.Models;
@@ -16,14 +18,25 @@ namespace Ma5zonyProject.Controllers
     {
         private StoreIRepo _store;
         private StoreLogIRepo _log;
-        public StoreController(StoreIRepo store,StoreLogIRepo log)
+        private readonly UserManager<ApplicationUser> _userManager;
+
+        public StoreController(StoreIRepo store, StoreLogIRepo log, UserManager<ApplicationUser> userManager)
         {
             _store = store;
             _log = log;
+            _userManager = userManager;
         }
         [HttpGet]
-        public IActionResult GetAll(int pageSize = 5, int pageNumber = 1, string? name = null, string? country = null, string? city = null)
+        public async Task<IActionResult> GetAll(int pageSize = 5, int pageNumber = 1, string? name = null, string? country = null, string? city = null)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null || user.IsDeleted == true)
+            {
+                var res = new Result<Store>();
+                res.Meesage = "يرجى تسجيل الدخول اولا";
+                return Unauthorized(res);
+            }
             if (pageNumber <= 0 || pageSize <= 0)
             {
                 var res = new Result<List<Store>>(isSuccess: false, message: "رقم الصفحة وعدد العناصر يجب أن يكونا أكبر من الصفر",
@@ -38,7 +51,7 @@ namespace Ma5zonyProject.Controllers
             if (!string.IsNullOrWhiteSpace(city)) filters.Add("City", city);
 
             // استدعاء الفلترة والباجينيشن من الـ Repo مباشرة
-            var data = _store.GetAll(pageSize: pageSize, pageNumber: pageNumber, filters: filters);
+            var data = _store.GetAll(pageSize: pageSize, pageNumber: pageNumber, filters: filters,expression:e=>e.IsDeleted==false);
 
             var total = data.Total;
             var result = new Result<List<Store>>(isSuccess: true, total: total, pageSize: pageSize, pageNumber: pageNumber, data: data.Data?.ToList());
@@ -48,10 +61,17 @@ namespace Ma5zonyProject.Controllers
 
         [HttpGet]
         [Route("get-store/{id}")]
-        public IActionResult GetOne(int id)
+        public async Task<IActionResult> GetOne(int id)
         {
             var result = new Result<Store>();
-            var store = _store.GetOne(e => e.StoreId == id);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null || user.IsDeleted == true)
+            {
+                result.Meesage = "يرجى تسجيل الدخول اولا";
+                return Unauthorized(result);
+            }
+            var store = _store.GetOne(e => e.StoreId == id&&e.IsDeleted==false);
             if (store != null)
             {
                 result.IsSuccess = true;
@@ -64,10 +84,16 @@ namespace Ma5zonyProject.Controllers
         }
         [HttpPost]
         [Route("create")]
-        public IActionResult Create(StoreCreateVM storeVM)
+        public async Task<IActionResult> Create(StoreCreateVM storeVM)
         {
             var result = new Result<StoreCreateVM>();
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null || user.IsDeleted == true)
+            {
+                result.Meesage = "يرجى تسجيل الدخول اولا";
+                return Unauthorized(result);
+            }
             if (ModelState.IsValid)
             {
                 Store newStore = new Store { Name = storeVM.Name, Country = storeVM.Country, City = storeVM.City };
@@ -75,7 +101,7 @@ namespace Ma5zonyProject.Controllers
                 _store.commit();
                 result.IsSuccess = true;
                 result.Meesage = "تم انشاء المخزن بنجاح";
-                _log.CreateOperationLog(oldStore:null,newStore: newStore, operationType: StaticData.AddOperationType, userId: userId);
+                _log.CreateOperationLog(oldStore: null, newStore: newStore, operationType: StaticData.AddOperationType, userId: userId);
                 return Ok(result);
             }
             result.Data = storeVM;
@@ -83,21 +109,37 @@ namespace Ma5zonyProject.Controllers
         }
         [HttpPut]
         [Route("Edit")]
-        public IActionResult Edit(StoreEditVM store)
+        public async Task<IActionResult> Edit(StoreEditVM storeVM)
         {
-                var result = new Result<Store>();
+            var result = new Result<Store>();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null || user.IsDeleted == true)
+            {
+                result.Meesage = "يرجى تسجيل الدخول اولا";
+                return Unauthorized(result);
+            }
             if (ModelState.IsValid)
             {
-                var oldStore = _store.GetOne(e => e.StoreId == store.StoreId);
-                if (oldStore != null)
+                var store = _store.GetOne(e => e.StoreId == storeVM.StoreId);
+                var oldStore = new Store
                 {
-                    oldStore.Name= store.Name;
-                    oldStore.Country= store.Country;
-                    oldStore.City= store.City;
-                    _store.Edit(oldStore);
+                    StoreId = store.StoreId,
+                    Name = store.Name,
+                    Country = store.Country,
+                    City = store.City
+                };
+                if (store != null)
+                {
+                    store.Name = storeVM.Name;
+                    store.Country = storeVM.Country;
+                    store.City = storeVM.City;
+                    
+                    _store.Edit(store);
                     _store.commit();
                     result.IsSuccess = true;
                     result.Meesage = "تم التعديل بنجاح";
+                    _log.CreateOperationLog(oldStore, store,StaticData.EditOperationType,userId);
                     return Ok(result);
                 }
                 result.Meesage = "لم يتم العثور على هذا العنصر";
@@ -107,27 +149,43 @@ namespace Ma5zonyProject.Controllers
         }
         [HttpDelete]
         [Route("delete/{id}")]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
             var result = new Result<Store>();
-            var store=_store.GetOne(e=>e.StoreId == id);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null || user.IsDeleted == true)
+            {
+                result.Meesage = "يرجى تسجيل الدخول اولا";
+                return Unauthorized(result);
+            }
+            var store = _store.GetOne(e => e.StoreId == id);
             if (store != null)
             {
-                _store.Delete(id);
+                store.IsDeleted = true;
+                _store.Edit(store);
                 _store.commit();
                 result.Meesage = "تم الحذف بنجاح";
-                result.IsSuccess=true;
+                result.IsSuccess = true;
+                _log.CreateOperationLog(oldStore:store,newStore:null,StaticData.DeleteOperationType,userId);
                 return Ok(result);
             }
             result.Meesage = "لم يتم العثور على هذا العنصر";
             return BadRequest(result);
         }
         [HttpGet("get-stores-for-operation")]
-        public IActionResult GetStoresForOperation()
+        public async Task<IActionResult> GetStoresForOperation()
         {
             var res = new Result<List<StoreForOperation>>();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null || user.IsDeleted == true)
+            {
+                res.Meesage = "يرجى تسجيل الدخول اولا";
+                return Unauthorized(res);
+            }
             res.Data = _store.GetStoresForOperations();
-            res.IsSuccess=true;
+            res.IsSuccess = true;
             return Ok(res);
         }
     }
