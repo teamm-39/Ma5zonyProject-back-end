@@ -1,9 +1,11 @@
 ﻿using DataAccess.IRepos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Models.Models;
 using Models.ViewModels;
+using System.Security.Claims;
 using Utility;
 
 namespace Ma5zonyProject.Controllers
@@ -13,15 +15,25 @@ namespace Ma5zonyProject.Controllers
     public class CustomerController : ControllerBase
     {
         private CustomerSupplierIRepo _customer;
-
-        public CustomerController(CustomerSupplierIRepo customer)
+        private UserManager<ApplicationUser> _userManager;
+        private CustomerSupplierLogIRepo _log;
+        public CustomerController(CustomerSupplierIRepo customer, CustomerSupplierLogIRepo log, UserManager<ApplicationUser> userManager)
         {
             _customer = customer;
+            _log = log;
+            _userManager = userManager;
         }
         [HttpGet]
-        public IActionResult GetAll(int pageNumber = 1, int pageSize = 5, string? name = null, int? age = null, string? address = null, int? numOfDeal = null, bool? isReliable = null, string? phoneNum = null, string? email = null)
+        public async Task<IActionResult> GetAll(int pageNumber = 1, int pageSize = 5, string? name = null, int? age = null, string? address = null, int? numOfDeal = null, bool? isReliable = null, string? phoneNum = null, string? email = null)
         {
             var res = new Result<List<CustomersSuppliersVM>>();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null || user.IsDeleted == true)
+            {
+                res.Meesage = "يرجى تسجيل الدخول اولا";
+                return Unauthorized(res);
+            }
             if (pageSize <= 0 || pageNumber <= 0)
             {
                 res.Meesage = "رقم الصفحة وعدد العناصر يجب أن يكونا أكبر من الصفر";
@@ -64,9 +76,16 @@ namespace Ma5zonyProject.Controllers
             return Ok(res);
         }
         [HttpPost("create")]
-        public IActionResult Create(CustomerSupplierCreateVM supplierVM)
+        public async Task<IActionResult> Create(CustomerSupplierCreateVM supplierVM)
         {
             var res = new Result<CustomerSupplierCreateVM>();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null || user.IsDeleted == true)
+            {
+                res.Meesage = "يرجى تسجيل الدخول اولا";
+                return Unauthorized(res);
+            }
             if (!ModelState.IsValid)
             {
                 res.Meesage = "يرجى ادخال بيانات المنتج بشكل صحيح";
@@ -103,12 +122,20 @@ namespace Ma5zonyProject.Controllers
             _customer.Create(newCustomer);
             _customer.commit();
             res.IsSuccess = true;
+            _log.CreateOperationLog(null, newCustomer, StaticData.AddOperationType, userId);
             return Ok(res);
         }
         [HttpGet("details/{id}")]
-        public IActionResult GetOne(int id)
+        public async Task<IActionResult> GetOne(int id)
         {
             var res = new Result<CustomerSupplierVM>();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null || user.IsDeleted == true)
+            {
+                res.Meesage = "يرجى تسجيل الدخول اولا";
+                return Unauthorized(res);
+            }
             var supplier = _customer.GetOne(e => e.CustomerSupplierId == id && e.IsDeleted == false && e.LookupCustomerSupplierTypeId == 2);
             if (supplier == null)
             {
@@ -131,16 +158,23 @@ namespace Ma5zonyProject.Controllers
             return Ok(res);
         }
         [HttpPut("edit")]
-        public IActionResult Edit(CustomerSupplierEditVM customerVM)
+        public async Task<IActionResult> Edit(CustomerSupplierEditVM customerVM)
         {
             var res = new Result<CustomerSupplierCreateVM>();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null || user.IsDeleted == true)
+            {
+                res.Meesage = "يرجى تسجيل الدخول اولا";
+                return Unauthorized(res);
+            }
             if (!ModelState.IsValid)
             {
                 res.Meesage = "يرجى ادخال بيانات المنتج بشكل صحيح";
                 return BadRequest(res);
             }
-            var oldCustomer = _customer.GetOne(e => e.CustomerSupplierId == customerVM.CustomerSupplierId && e.IsDeleted == false && e.LookupCustomerSupplierTypeId == 2);
-            if (oldCustomer == null)
+            var customer = _customer.GetOne(e => e.CustomerSupplierId == customerVM.CustomerSupplierId && e.IsDeleted == false && e.LookupCustomerSupplierTypeId == 2);
+            if (customer == null)
             {
                 res.Meesage = "لم يتم العثور على هذا العميل";
                 return BadRequest(res);
@@ -162,37 +196,64 @@ namespace Ma5zonyProject.Controllers
                 res.Meesage = "البريد الالكترونى موجود بالفعل";
                 return BadRequest(res);
             }
-            oldCustomer.Name = customerVM.Name;
-            oldCustomer.Email = customerVM.Email;
-            oldCustomer.Address = customerVM.Address;
-            oldCustomer.PhoneNumber = customerVM.PhoneNumber;
-            oldCustomer.Age = customerVM.Age;
-            oldCustomer.IsReliable = customerVM.IsReliable;
-            _customer.Edit(oldCustomer);
+            var oldCustomer = new CustomerSupplier
+            {
+                Age = customer.Age,
+                Address = customer.Address,
+                CustomerSupplierId = customer.CustomerSupplierId,
+                Email = customer.Email,
+                IsReliable = customer.IsReliable,
+                LookupCustomerSupplierTypeId = customer.LookupCustomerSupplierTypeId,
+                Name = customer.Name,
+                PhoneNumber = customer.PhoneNumber
+            };
+            customer.Name = customerVM.Name;
+            customer.Email = customerVM.Email;
+            customer.Address = customerVM.Address;
+            customer.PhoneNumber = customerVM.PhoneNumber;
+            customer.Age = customerVM.Age;
+            customer.IsReliable = customerVM.IsReliable;
+            _customer.Edit(customer);
             _customer.commit();
             res.IsSuccess = true;
+            _log.CreateOperationLog(oldCustomer, customer, StaticData.EditOperationType, userId);
             return Ok(res);
         }
         [HttpDelete("delete/{id}")]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
             var res = new Result<CustomerSupplierVM>();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null || user.IsDeleted == true)
+            {
+                res.Meesage = "يرجى تسجيل الدخول اولا";
+                return Unauthorized(res);
+            }
             var customer = _customer.GetOne(e => e.CustomerSupplierId == id && e.IsDeleted == false && e.LookupCustomerSupplierTypeId == 2);
             if (customer == null)
             {
                 res.Meesage = "لم يتم العثور على هذا المورد";
                 return BadRequest(res);
             }
-            customer.IsDeleted= true;
+            customer.IsDeleted = true;
             _customer.Edit(customer);
             _customer.commit();
             res.IsSuccess = true;
+            _log.CreateOperationLog(customer, null, StaticData.DeleteOperationType, userId);
             return Ok(res);
         }
         [HttpGet("get-customers-for-operation")]
-        public IActionResult GetSuppliersForOperation()
+        public async Task<IActionResult> GetSuppliersForOperation()
         {
             var res = new Result<List<SupplierOrCustomerForOperation>>();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null || user.IsDeleted == true)
+            {
+                res.Meesage = "يرجى تسجيل الدخول اولا";
+                return Unauthorized(res);
+            }
             var customers = _customer.GetSuppliersOrCustomersForOperation(2);
             res.Data = customers;
             res.IsSuccess = true;
