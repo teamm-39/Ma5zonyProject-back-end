@@ -1,10 +1,13 @@
 ﻿using DataAccess.IRepos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Models.Models;
 using Models.ViewModels;
 using System.Diagnostics.Metrics;
+using System.Security.Claims;
 using Utility;
 
 namespace Ma5zonyProject.Controllers
@@ -14,15 +17,26 @@ namespace Ma5zonyProject.Controllers
     public class ProductController : ControllerBase
     {
         private ProductIRepo _product;
+        private UserManager<ApplicationUser> _userManager;
+        private ProductLogIRepo _log;
 
-        public ProductController(ProductIRepo product)
+        public ProductController(ProductIRepo product, UserManager<ApplicationUser> userManager, ProductLogIRepo log)
         {
             _product = product;
+            _userManager = userManager;
+            _log = log;
         }
         [HttpGet]
-        public IActionResult GetAll(int pageSize = 5, int pageNumber = 1, string? name = null, double? sellingPrice = null, double? purchasePrice = null)
+        public async Task<IActionResult> GetAll(int pageSize = 5, int pageNumber = 1, string? name = null, double? sellingPrice = null, double? purchasePrice = null)
         {
             var res = new Result<List<ProductsVM>>();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null || user.IsDeleted == true)
+            {
+                res.Meesage = "يرجى تسجيل الدخول اولا";
+                return Unauthorized(res);
+            }
             if (pageSize <= 0 || pageNumber <= 0)
             {
                 res.Meesage = "رقم الصفحة وعدد العناصر يجب أن يكونا أكبر من الصفر";
@@ -54,9 +68,16 @@ namespace Ma5zonyProject.Controllers
             return Ok(res);
         }
         [HttpPost("crete")]
-        public IActionResult Create(ProductVM productVM)
+        public async Task<IActionResult> Create(ProductVM productVM)
         {
             var res = new Result<ProductVM>();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null || user.IsDeleted == true)
+            {
+                res.Meesage = "يرجى تسجيل الدخول اولا";
+                return Unauthorized(res);
+            }
             if (!ModelState.IsValid || productVM.SellingPrice <= 0 || productVM.PurchasePrice <= 0 || productVM.MinLimit <= 0)
             {
                 res.Meesage = "يرجى ادخال بيانات المنتج بشكل صحيح";
@@ -80,12 +101,20 @@ namespace Ma5zonyProject.Controllers
             _product.commit();
             res.IsSuccess = true;
             res.Meesage = "تم انشاء المنتج بنجاح";
+            _log.CreateOperationLog(null, product, StaticData.AddOperationType, userId);
             return Ok(res);
         }
         [HttpGet("details/{id}")]
-        public IActionResult GetOne(int id)
+        public async Task<IActionResult> GetOne(int id)
         {
             var res = new Result<ProductDetailsVM>();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null || user.IsDeleted == true)
+            {
+                res.Meesage = "يرجى تسجيل الدخول اولا";
+                return Unauthorized(res);
+            }
             var product = _product.GetOne(e => e.ProductId == id);
             if (product == null || product.IsDeleted == true)
             {
@@ -106,9 +135,16 @@ namespace Ma5zonyProject.Controllers
             return Ok(res);
         }
         [HttpPut("edit")]
-        public IActionResult Edit(ProductEditVM productVM)
+        public async Task<IActionResult> Edit(ProductEditVM productVM)
         {
             var res = new Result<ProductDetailsVM>();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null || user.IsDeleted == true)
+            {
+                res.Meesage = "يرجى تسجيل الدخول اولا";
+                return Unauthorized(res);
+            }
             if (!ModelState.IsValid || productVM.MinLimit <= 0 || productVM.SellingPrice <= 0 || productVM.PurchasePrice <= 0)
             {
                 res.Meesage = "يرجى ادخال بيانات المنتج بشكل صحيح";
@@ -135,25 +171,40 @@ namespace Ma5zonyProject.Controllers
                 res.Meesage = "اسم المنتج مستخدم من قبل";
                 return BadRequest(res);
             }
-            var oldProduct = _product.GetOne(e => e.ProductId == productVM.ProductId);
-            if (oldProduct == null || oldProduct.IsDeleted == true)
+            var product = _product.GetOne(e => e.ProductId == productVM.ProductId);
+            if (product == null || product.IsDeleted == true)
             {
                 res.Meesage = "لم يتم العثور على هذا المنتج";
                 return BadRequest(res);
             }
-            oldProduct.Name = productVM.Name;
-            oldProduct.PurchasePrice = productVM.PurchasePrice;
-            oldProduct.SellingPrice = productVM.SellingPrice;
-            oldProduct.MinLimit = productVM.MinLimit;
-            _product.Edit(oldProduct);
+            var oldProduct = new Product
+            {
+                Name = product.Name,
+                MinLimit = product.MinLimit,
+                PurchasePrice = product.PurchasePrice,
+                SellingPrice = product.SellingPrice,
+            };
+            product.Name = productVM.Name;
+            product.PurchasePrice = productVM.PurchasePrice;
+            product.SellingPrice = productVM.SellingPrice;
+            product.MinLimit = productVM.MinLimit;
+            _product.Edit(product);
             _product.commit();
             res.IsSuccess = true;
+            _log.CreateOperationLog(oldProduct, product, StaticData.EditOperationType, userId);
             return Ok(res);
         }
         [HttpDelete("delete/{id}")]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
             var res = new Result<ProductVM>();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null || user.IsDeleted == true)
+            {
+                res.Meesage = "يرجى تسجيل الدخول اولا";
+                return Unauthorized(res);
+            }
             var product = _product.GetOne(e => e.ProductId == id);
             if (product == null || product.IsDeleted == true)
             {
@@ -169,20 +220,35 @@ namespace Ma5zonyProject.Controllers
             _product.commit();
             res.IsSuccess = true;
             res.Meesage = "تم حذف المنتج بنجاح";
+            _log.CreateOperationLog(product, null, StaticData.DeleteOperationType, userId);
             return Ok(res);
         }
         [HttpGet("get-products-for-import-operation")]
-        public IActionResult GetProductsForImportOperations()
+        public async Task<IActionResult> GetProductsForImportOperations()
         {
             var res = new Result<List<ProductForOperation>>();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null || user.IsDeleted == true)
+            {
+                res.Meesage = "يرجى تسجيل الدخول اولا";
+                return Unauthorized(res);
+            }
             res.Data = _product.GetProductsForOperations(1);
             res.IsSuccess = true;
             return Ok(res);
         }
         [HttpGet("get-products-for-export-operation")]
-        public IActionResult GetProductsForExportOperations()
+        public async Task<IActionResult> GetProductsForExportOperations()
         {
             var res = new Result<List<ProductForOperation>>();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null || user.IsDeleted == true)
+            {
+                res.Meesage = "يرجى تسجيل الدخول اولا";
+                return Unauthorized(res);
+            }
             res.Data = _product.GetProductsForOperations(2);
             res.IsSuccess = true;
             return Ok(res);
