@@ -20,6 +20,7 @@ namespace DataAccess.Data
         public DbSet<StoreLog> StoreLogs { get; set; }
         public DbSet<ProductLog> ProductLogs { get; set; }
         public DbSet<CustomerSupplierLog> CustomerSupplierLogs { get; set; }
+        public DbSet<ApplicationUserLog> ApplicationUserLogs { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
