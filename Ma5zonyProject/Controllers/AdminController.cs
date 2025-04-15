@@ -17,14 +17,15 @@ namespace Ma5zonyProject.Controllers
         private readonly ApplicationUserIRepo _users;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
-
+        private readonly ApplicationUserLogIRepo _log;
         public AdminController(ApplicationUserIRepo users,
                         UserManager<ApplicationUser> userManager,
-                        RoleManager<IdentityRole> roleManager)
+                        RoleManager<IdentityRole> roleManager, ApplicationUserLogIRepo log)
         {
             _users = users;
             _userManager = userManager;
             _roleManager = roleManager;
+            _log = log;
         }
 
         [HttpGet]
@@ -39,6 +40,13 @@ namespace Ma5zonyProject.Controllers
         {
             var res = new Result<List<AdminsDTO>>(isSuccess: false, message: "",
                                               pageNumber: pageNumber, pageSize: pageSize, data: []);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null || user.IsDeleted == true)
+            {
+                res.Meesage = "يرجى تسجيل الدخول اولا";
+                return Unauthorized(res);
+            }
             if (pageSize < 1 || pageNumber < 1)
             {
                 res.Meesage = "رقم الصفحة وعدد العناصر يجب أن يكونا أكبر من 0";
@@ -54,7 +62,6 @@ namespace Ma5zonyProject.Controllers
             if (!string.IsNullOrEmpty(phone)) filter.Add("PhoneNumber", phone);
             if (!string.IsNullOrEmpty(address)) filter.Add("Address", address);
             //data
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var adminUsers = _users.GetAll(
                                             pageNumber: pageNumber,
                                             pageSize: pageSize,
@@ -81,6 +88,13 @@ namespace Ma5zonyProject.Controllers
         public async Task<ActionResult> CreateAdmin([FromForm] UserDTO user, IFormFile? img)
         {
             var res = new Result<UserDTO>();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userLogedIn = await _userManager.FindByIdAsync(userId);
+            if (userLogedIn == null || userLogedIn.IsDeleted == true)
+            {
+                res.Meesage = "يرجى تسجيل الدخول اولا";
+                return Unauthorized(res);
+            }
             if (!ModelState.IsValid)
             {
                 res.Meesage = "يوجد خطأ فى البيانات التى تم ارسالها";
@@ -149,6 +163,7 @@ namespace Ma5zonyProject.Controllers
                 }
                 res.IsSuccess = true;
                 await _userManager.AddToRoleAsync(createdUser, StaticData.admin);
+                _log.CreateOperationLog(null, createdUser, StaticData.AddOperationType, userId, StaticData.admin);
                 return Ok(res);
             }
             res.Meesage = string.Join(" | ", createUser.Errors.Select(e => e.Description));
@@ -158,6 +173,13 @@ namespace Ma5zonyProject.Controllers
         public async Task<ActionResult> GetOne(string id)
         {
             var res = new Result<UserDTO>();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userLogedIn = await _userManager.FindByIdAsync(userId);
+            if (userLogedIn == null || userLogedIn.IsDeleted == true)
+            {
+                res.Meesage = "يرجى تسجيل الدخول اولا";
+                return Unauthorized(res);
+            }
             if (string.IsNullOrEmpty(id))
             {
                 res.Meesage = "لا يمكن ترك المعرف فارغا";
@@ -189,6 +211,13 @@ namespace Ma5zonyProject.Controllers
         public async Task<ActionResult> Edit([FromForm] AdminDTO newAdmin, IFormFile? img)
         {
             var res = new Result<AdminDTO>();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userLogedIn = await _userManager.FindByIdAsync(userId);
+            if (userLogedIn == null || userLogedIn.IsDeleted == true)
+            {
+                res.Meesage = "يرجى تسجيل الدخول اولا";
+                return Unauthorized(res);
+            }
             if (!ModelState.IsValid)
             {
                 res.Meesage = "يوجد خطأ فى البيانات التى تم اراسلها";
@@ -223,6 +252,7 @@ namespace Ma5zonyProject.Controllers
                     return BadRequest(res);
                 }
             }
+            var oldAdmin = new ApplicationUser { Address = admin.Address, Email = admin.Email, Age = admin.Age, ImgUrl = admin.ImgUrl, Name = admin.Name, UserName = admin.UserName, PhoneNumber = admin.PhoneNumber };
             admin.Email = newAdmin.Email;
             admin.UserName = newAdmin.UserName;
             admin.Address = newAdmin.Address;
@@ -266,25 +296,33 @@ namespace Ma5zonyProject.Controllers
                 return BadRequest(res);
             }
             res.IsSuccess = true;
+            _log.CreateOperationLog(oldAdmin, admin, StaticData.EditOperationType, userId, StaticData.admin);
             return Ok(res);
         }
         [HttpDelete("delete/{id}")]
         public async Task<ActionResult> Delete([FromRoute] string id)
         {
             var res = new Result<AdminDTO>();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var userLogedIn = await _userManager.FindByIdAsync(userId);
+            if (userLogedIn == null || userLogedIn.IsDeleted == true)
+            {
+                res.Meesage = "يرجى تسجيل الدخول اولا";
+                return Unauthorized(res);
+            }
             if (string.IsNullOrEmpty(id))
             {
                 res.Meesage = "لم يتم ارسال المعرف الشخصى";
                 return BadRequest(res);
             }
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var getAdmin = await _userManager.FindByIdAsync(id);
             if (getAdmin == null || !await _userManager.IsInRoleAsync(getAdmin, StaticData.admin) || getAdmin.IsDeleted == true)
             {
                 res.Meesage = "لم يتم العثور على المالك";
                 return BadRequest(res);
             }
-            if(userId == getAdmin.Id)
+            if (userId == getAdmin.Id)
             {
                 res.Meesage = "انت هذا المالك لا يمكن حذف بياناتك بنفسك";
                 return BadRequest(res);
@@ -297,6 +335,7 @@ namespace Ma5zonyProject.Controllers
                 return BadRequest(res);
             }
             res.IsSuccess = true;
+            _log.CreateOperationLog(getAdmin, null, StaticData.DeleteOperationType, userId, StaticData.admin);
             return Ok(res);
         }
     }

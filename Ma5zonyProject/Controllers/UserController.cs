@@ -16,14 +16,15 @@ namespace Ma5zonyProject.Controllers
         private readonly ApplicationUserIRepo _users;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
-
+        private readonly ApplicationUserLogIRepo _log;
         public UserController(ApplicationUserIRepo users,
                         UserManager<ApplicationUser> userManager,
-                        RoleManager<IdentityRole> roleManager)
+                        RoleManager<IdentityRole> roleManager, ApplicationUserLogIRepo log)
         {
             _users = users;
             _userManager = userManager;
             _roleManager = roleManager;
+            _log = log;
         }
 
         [HttpGet]
@@ -38,6 +39,13 @@ namespace Ma5zonyProject.Controllers
         {
             var res = new Result<List<UsersDTO>>(isSuccess: false, message: "",
                                               pageNumber: pageNumber, pageSize: pageSize, data: []);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userLogedIn = await _userManager.FindByIdAsync(userId);
+            if (userLogedIn == null || userLogedIn.IsDeleted == true)
+            {
+                res.Meesage = "يرجى تسجيل الدخول اولا";
+                return Unauthorized(res);
+            }
             if (pageSize < 1 || pageNumber < 1)
             {
                 res.Meesage = "رقم الصفحة وعدد العناصر يجب أن يكونا أكبر";
@@ -80,6 +88,13 @@ namespace Ma5zonyProject.Controllers
         public async Task<ActionResult> CreateUser([FromForm] UserDTO userDTO, IFormFile? img)
         {
             var res = new Result<UserDTO>();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userLogedIn = await _userManager.FindByIdAsync(userId);
+            if (userLogedIn == null || userLogedIn.IsDeleted == true)
+            {
+                res.Meesage = "يرجى تسجيل الدخول اولا";
+                return Unauthorized(res);
+            }
             if (!ModelState.IsValid)
             {
                 res.Meesage = "يوجد خطأ فى البيانات التى تم ارسالها";
@@ -148,6 +163,7 @@ namespace Ma5zonyProject.Controllers
                 }
                 res.IsSuccess = true;
                 await _userManager.AddToRoleAsync(user, StaticData.user);
+                _log.CreateOperationLog(null, user, StaticData.AddOperationType, userId, StaticData.user);
                 return Ok(res);
             }
             res.Meesage = string.Join(" | ", createUser.Errors.Select(e => e.Description));
@@ -157,6 +173,13 @@ namespace Ma5zonyProject.Controllers
         public async Task<ActionResult> GetOne(string id)
         {
             var res = new Result<UserDTO>();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userLogedIn = await _userManager.FindByIdAsync(userId);
+            if (userLogedIn == null || userLogedIn.IsDeleted == true)
+            {
+                res.Meesage = "يرجى تسجيل الدخول اولا";
+                return Unauthorized(res);
+            }
             if (string.IsNullOrEmpty(id))
             {
                 res.Meesage = "لا يمكن ترك المعرف فارغا";
@@ -188,6 +211,13 @@ namespace Ma5zonyProject.Controllers
         public async Task<ActionResult> Edit([FromForm] UserDTO newUser, IFormFile? img)
         {
             var res = new Result<UserDTO>();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userLogedIn = await _userManager.FindByIdAsync(userId);
+            if (userLogedIn == null || userLogedIn.IsDeleted == true)
+            {
+                res.Meesage = "يرجى تسجيل الدخول اولا";
+                return Unauthorized(res);
+            }
             if (!ModelState.IsValid)
             {
                 res.Meesage = "يوجد خطأ فى البيانات التى تم اراسلها";
@@ -222,6 +252,8 @@ namespace Ma5zonyProject.Controllers
                     return BadRequest(res);
                 }
             }
+            var oldUser = new ApplicationUser
+            { Address = user.Address, Email = user.Email, Age = user.Age, ImgUrl = user.ImgUrl, Name = user.Name, UserName = user.UserName, PhoneNumber = user.PhoneNumber };
             user.Email = newUser.Email;
             user.UserName = newUser.UserName;
             user.Address = newUser.Address;
@@ -265,18 +297,25 @@ namespace Ma5zonyProject.Controllers
                 return BadRequest(res);
             }
             res.IsSuccess = true;
+            _log.CreateOperationLog(oldUser, user, StaticData.EditOperationType, userId, StaticData.user);
             return Ok(res);
         }
         [HttpDelete("delete/{id}")]
         public async Task<ActionResult> Delete([FromRoute] string id)
         {
             var res = new Result<UserDTO>();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userLogedIn = await _userManager.FindByIdAsync(userId);
+            if (userLogedIn == null || userLogedIn.IsDeleted == true)
+            {
+                res.Meesage = "يرجى تسجيل الدخول اولا";
+                return Unauthorized(res);
+            }
             if (string.IsNullOrEmpty(id))
             {
                 res.Meesage = "لم يتم ارسال المعرف الشخصى";
                 return BadRequest(res);
             }
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var getUser = await _userManager.FindByIdAsync(id);
             if (getUser == null || !await _userManager.IsInRoleAsync(getUser, StaticData.user) || getUser.IsDeleted == true)
             {
@@ -296,6 +335,7 @@ namespace Ma5zonyProject.Controllers
                 return BadRequest(res);
             }
             res.IsSuccess = true;
+            _log.CreateOperationLog(getUser, null, StaticData.DeleteOperationType, userId, StaticData.user);
             return Ok(res);
         }
     }
