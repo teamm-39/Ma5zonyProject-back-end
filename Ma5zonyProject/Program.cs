@@ -22,24 +22,22 @@ namespace Ma5zonyProject
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
-            // Configure CORS
             builder.Services.AddCors(options =>
             {
-                options.AddPolicy("AllowFrontend",
-                    policy =>
-                    {
-                        policy.WithOrigins("http://localhost:5173") // Update this to match your front-end URL
-                              .AllowCredentials()  // Allow cookies
-                              .AllowAnyHeader()
-                              .AllowAnyMethod();
-                    });
+                options.AddPolicy("AllowFrontend", policy =>
+                {
+                    policy.WithOrigins("http://localhost:5173", "https://ma5zony-project-front-end-5wxg.vercel.app") // Add both origins here
+                          .AllowCredentials()  // Allow cookies
+                          .AllowAnyHeader()
+                          .AllowAnyMethod();
+                });
             });
 
             // Configure Application Cookie
             builder.Services.ConfigureApplicationCookie(options =>
             {
-                options.Cookie.HttpOnly = true;
-                options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // Use 'Always' in production
+                options.Cookie.HttpOnly = true;  // الكوكي فقط يمكن الوصول إليها من السيرفر
+                options.Cookie.SecurePolicy = CookieSecurePolicy.Always;  // الكوكي تُرسل فقط عبر HTTPS
                 options.Cookie.SameSite = SameSiteMode.None; // Allow cross-origin cookies
                 options.LoginPath = "/api/Users/sign-in"; // Redirect unauthenticated users
                 //options.Cookie.IsEssential = true;
@@ -62,8 +60,8 @@ namespace Ma5zonyProject
             builder.Services.AddScoped<StoreProductIRepo, StoreProductRepo>();
             builder.Services.AddScoped<ApplicationUserIRepo, ApplicationUserRepo>();
             builder.Services.AddScoped<OperationStoreProductIRepo, OperationStoreProductRepo>();
-            builder.Services.AddScoped<StoreLogIRepo, StoreLogRepo >();
-            builder.Services.AddScoped<ProductLogIRepo, ProductLogRepo >();
+            builder.Services.AddScoped<StoreLogIRepo, StoreLogRepo>();
+            builder.Services.AddScoped<ProductLogIRepo, ProductLogRepo>();
             builder.Services.AddScoped<CustomerSupplierLogIRepo, CustomerSupplierLogRepo>();
             builder.Services.AddScoped<ApplicationUserLogIRepo, ApplicationUserLogRepo>();
             // Configure Identity Options

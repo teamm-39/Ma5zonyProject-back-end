@@ -7,6 +7,7 @@ using Utility;
 using Models.ViewModels;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace Ma5zonyProject.Controllers
 {
@@ -118,7 +119,6 @@ namespace Ma5zonyProject.Controllers
         [HttpPost("sign-in")]
         public async Task<ActionResult> Login(UserLoginVM user)
         {
-            var xx = User.Identity.IsAuthenticated;
             Result<UserLoginVM> result = new(false);
             if (ModelState.IsValid)
             {
@@ -142,20 +142,19 @@ namespace Ma5zonyProject.Controllers
             return Ok(result);
         }
         [HttpGet("is-loged-in")]
-        public IActionResult Chek()
+        public async Task<IActionResult> Chek()
         {
             var result = new Result<bool>();
-            result.IsSuccess = true;
-            if (User.Identity.IsAuthenticated)
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null || user.IsDeleted == true)
             {
-                result.Data = true;
-                return Ok(result);
-            }
-            else
-            {
+                result.Meesage = "يرجى تسجيل الدخول اولا";
                 result.Data = false;
-                return Ok(result);
+                return Unauthorized(result);
             }
+            result.Data = true;
+            return Ok(result);
         }
     }
 }
