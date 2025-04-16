@@ -26,7 +26,7 @@ namespace Ma5zonyProject
             {
                 options.AddPolicy("AllowFrontend", policy =>
                 {
-                    policy.WithOrigins("http://localhost:5173", "https://ma5zony-project-front-end-5wxg.vercel.app") // Add both origins here
+                    policy.WithOrigins("http://localhost:5173", "https://ma5zony-project.vercel.app") // Add both origins here
                           .AllowCredentials()  // Allow cookies
                           .AllowAnyHeader()
                           .AllowAnyMethod();
