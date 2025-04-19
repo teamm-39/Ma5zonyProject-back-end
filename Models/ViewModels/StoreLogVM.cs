@@ -16,7 +16,7 @@ namespace Models.ViewModels
         public string NewName { get; set; }
         public string NewCountry { get; set; }
         public string NewCity { get; set; }
-        public string LookupOperationTypeName { get; set; }
+        public int LookupOperationTypeId { get; set; }
         public string Message { get; set; }
     }
 }

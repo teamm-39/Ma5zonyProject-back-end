@@ -36,11 +36,10 @@ namespace Ma5zonyProject
             // Configure Application Cookie
             builder.Services.ConfigureApplicationCookie(options =>
             {
-                options.Cookie.HttpOnly = true;  // الكوكي فقط يمكن الوصول إليها من السيرفر
-                options.Cookie.SecurePolicy = CookieSecurePolicy.Always;  // الكوكي تُرسل فقط عبر HTTPS
-                options.Cookie.SameSite = SameSiteMode.None; // Allow cross-origin cookies
-                options.LoginPath = "/api/Users/sign-in"; // Redirect unauthenticated users
-                //options.Cookie.IsEssential = true;
+                options.Cookie.HttpOnly = true; // تمنع الوصول للكوكيز من JavaScript
+                options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest; // تفعيل Secure في بيئة الإنتاج
+                options.Cookie.SameSite = SameSiteMode.None; // السماح بالكروس أورجين
+                options.LoginPath = "/api/Users/sign-in"; // تحديد مسار تسجيل الدخول
             });
 
             // Configure DbContext
