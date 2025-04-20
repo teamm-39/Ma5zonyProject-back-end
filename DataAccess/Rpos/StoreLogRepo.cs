@@ -114,7 +114,7 @@ Dictionary<string, object>? filters = null)
             Message=e.Message,
             NewCity=e.NewCity,
             NewCountry=e.NewCountry,
-            NewName=e.NewName,OldCountry=e.OldName,OldName=e.OldName,OlgCity=e.OldCity,StoreLogId=e.StoreLogId,UserName=e.ApplicationUser.Name
+            NewName=e.NewName,OldCountry=e.OldName,OldName=e.OldName,OlgCity=e.OldCity,StoreLogId=e.StoreLogId,UserName=e.ApplicationUser.Name,DateTime=e.DateTime
             }).ToList();
             return data;
         }

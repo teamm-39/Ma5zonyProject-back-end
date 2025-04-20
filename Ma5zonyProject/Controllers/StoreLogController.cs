@@ -69,6 +69,7 @@ namespace Ma5zonyProject.Controllers
             Message=e.Message,
             NewCity=e.NewCity,
             NewCountry=e.NewCountry,
+            DateTime=e.DateTime,
             NewName=e.NewName,
             OldCountry=e.OldCountry,
             OldName=e.OldName,
