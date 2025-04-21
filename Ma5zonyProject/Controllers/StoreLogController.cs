@@ -24,7 +24,7 @@ namespace Ma5zonyProject.Controllers
             _userManager = userManager;
         }
         [HttpGet]
-        public async Task<IActionResult> GetAll(int pageSize = 5, int pageNumber = 1, DateTime? dateTime = null, string? storeName=null, string? userName=null, int? operationType=null)
+        public async Task<IActionResult> GetAll(int pageSize = 5, int pageNumber = 1, DateTime? dateTime = null, string? oldStoreName=null, string? newStoreName = null, string? userName=null, int? operationType=null)
         {
             var res = new Result<List<StoreLogVM>>();
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -57,13 +57,16 @@ namespace Ma5zonyProject.Controllers
             {
                 filters.Add("LookupOperationTypeId", operationType);
             }
-            Expression<Func<StoreLog, bool>>? expression = null;
 
-            if (!string.IsNullOrWhiteSpace(storeName))
+            if (!string.IsNullOrWhiteSpace(oldStoreName))
             {
-                expression = e => e.OldName.Contains(storeName) || e.NewName.Contains(storeName);
+                filters.Add("OldName",oldStoreName);
             }
-            var log = _log.GetAll(pageSize: pageSize, pageNumber: pageNumber, includes: [e => e.ApplicationUser], filters: filters,expression:expression);
+            if (!string.IsNullOrWhiteSpace(newStoreName))
+            {
+                filters.Add("NewName", newStoreName);
+            }
+            var log = _log.GetAll(pageSize: pageSize, pageNumber: pageNumber, includes: [e => e.ApplicationUser], filters: filters);
             res.Data = log.Data.Select(e => new StoreLogVM {
             LookupOperationTypeId=e.LookupOperationTypeId,
             Message=e.Message,
