@@ -112,5 +112,69 @@ namespace Ma5zonyProject.Controllers
             }).ToList();
             return Ok(res);
         }
+        [HttpGet("getAllWithoutPagination")]
+        public async Task<IActionResult> GetAllWithoutPagination(
+                        DateTime? dateTime = null,
+            string? oldProductName = null,
+            string? newProductName = null,
+            double? oldSellingPrice = null,
+            double? newSellingPrice = null,
+            double? oldPurchasePrice = null,
+            double? newPurchasePrice = null,
+            string? userName = null,
+            int? operationType = null)
+        {
+            var res = new Result<List<ProductLogVM>>();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null || user.IsDeleted == true)
+            {
+                res.Meesage = "يرجى تسجيل الدخول اولا";
+                return Unauthorized(res);
+            }
+            if (dateTime > DateTime.Now)
+            {
+                res.Meesage = "التاريخ يجب ان يكون بحد اقصى اليوم";
+                return BadRequest(res);
+            }
+            if (oldSellingPrice <= 0 || newSellingPrice <= 0 || oldPurchasePrice <= 0 || newPurchasePrice <= 0)
+            {
+                res.Meesage = "سعر الشراء وسعر البيع يجب ان يكونوا اكبر من الصفر";
+                return BadRequest(res);
+            }
+            var filters = new Dictionary<string, object>();
+
+            if (!string.IsNullOrWhiteSpace(userName))
+                filters.Add("ApplicationUser.Name", userName);
+
+            if (dateTime.HasValue)
+                filters.Add("DateTime", dateTime.Value);
+
+            if (operationType.HasValue)
+                filters.Add("LookupOperationTypeId", operationType);
+
+            if (!string.IsNullOrWhiteSpace(oldProductName))
+                filters.Add("OldName", oldProductName);
+
+            if (!string.IsNullOrWhiteSpace(newProductName))
+                filters.Add("NewName", newProductName);
+
+            if (oldSellingPrice.HasValue)
+                filters.Add("OldSellingPrice", oldSellingPrice.Value);
+
+            if (newSellingPrice.HasValue)
+                filters.Add("NewSellingPrice", newSellingPrice.Value);
+
+            if (oldPurchasePrice.HasValue)
+                filters.Add("OldPurchasePrice", oldPurchasePrice.Value);
+
+            if (newPurchasePrice.HasValue)
+                filters.Add("NewPurchasePrice", newPurchasePrice.Value);
+            var data = _log.GetAllWithoutPagination(includes: [e=>e.ApplicationUser],filters: filters);
+            res.Data= data;
+            res.IsSuccess= true;
+            res.Total = data.Count;
+            return Ok(res);
+        }
     }
 }

@@ -87,7 +87,7 @@ namespace Ma5zonyProject.Controllers
             return Ok(res);
         }
         [HttpGet("getAllWithoutPagination")]
-        public async Task<IActionResult> GetAllWithoutPagination(DateTime? dateTime = null, string? storeName = null, string? userName = null, int? operationType = null)
+        public async Task<IActionResult> GetAllWithoutPagination(string? oldStoreName, string? newStoreName, DateTime? dateTime = null, string? userName = null, int? operationType = null)
         {
             var res = new Result<List<StoreLogVM>>();
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -115,13 +115,15 @@ namespace Ma5zonyProject.Controllers
             {
                 filters.Add("LookupOperationTypeId", operationType);
             }
-            Expression<Func<StoreLog, bool>>? expression = null;
-
-            if (!string.IsNullOrWhiteSpace(storeName))
+            if (!string.IsNullOrWhiteSpace(oldStoreName))
             {
-                expression = e => e.OldName.Contains(storeName) || e.NewName.Contains(storeName);
+                filters.Add("OldName", oldStoreName);
             }
-            res.Data = _log.GetAllWithoutPagination(includes: [e=>e.ApplicationUser],filters: filters,expression: expression);
+            if (!string.IsNullOrWhiteSpace(newStoreName))
+            {
+                filters.Add("NewName", newStoreName);
+            }
+            res.Data = _log.GetAllWithoutPagination(includes: [e=>e.ApplicationUser],filters: filters);
             res.IsSuccess=true;
             res.Total= res.Data.Count;
             return Ok(res);
