@@ -151,6 +151,7 @@ namespace Ma5zonyProject.Controllers
             {
                 result.Meesage = "يرجى تسجيل الدخول اولا";
                 result.Data = false;
+                result.IsSuccess=true;
                 return Unauthorized(result);
             }
             result.Data = true;

@@ -6,6 +6,7 @@ using Ma5zonyProject.Controllers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Models.Models;
+using Serilog;
 
 namespace Ma5zonyProject
 {
@@ -26,7 +27,7 @@ namespace Ma5zonyProject
             {
                 options.AddPolicy("AllowFrontend", policy =>
                 {
-                    policy.WithOrigins("http://localhost:5173", "https://ma5zony-project.vercel.app") // Add both origins here
+                    policy.WithOrigins("http://localhost:5173", "https://makhzon.runasp.net", "https://ma5zoon.vercel.app") // Add both origins here
                           .AllowCredentials()  // Allow cookies
                           .AllowAnyHeader()
                           .AllowAnyMethod();
@@ -41,7 +42,11 @@ namespace Ma5zonyProject
                 options.Cookie.SameSite = SameSiteMode.None; // السماح بالكروس أورجين
                 options.LoginPath = "/api/Users/sign-in"; // تحديد مسار تسجيل الدخول
             });
-
+            builder.Host.UseSerilog((context, service, cong) => { 
+            
+            cong.ReadFrom.Configuration(context.Configuration)
+                .Enrich.FromLogContext();
+            });
             // Configure DbContext
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DeafultConnection")));
@@ -73,7 +78,7 @@ namespace Ma5zonyProject
                 options.Password.RequireNonAlphanumeric = false;
             });
             var app = builder.Build();
-
+            app.UseSerilogRequestLogging();
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
             {

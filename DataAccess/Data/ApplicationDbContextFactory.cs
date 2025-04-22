@@ -13,7 +13,7 @@ namespace DataAccess.Data
         public ApplicationDbContext CreateDbContext(string[] args)
         {
             var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
-            optionsBuilder.UseSqlServer("Data Source=.;Initial Catalog=ma5zon; Integrated Security=True;TrustServerCertificate=True");
+            optionsBuilder.UseSqlServer("Data Source=db17444.public.databaseasp.net;Initial Catalog=db17444;User ID=db17444;Password=d-5L8qC%#9nP;TrustServerCertificate=True;");
 
             return new ApplicationDbContext(optionsBuilder.Options);
         }

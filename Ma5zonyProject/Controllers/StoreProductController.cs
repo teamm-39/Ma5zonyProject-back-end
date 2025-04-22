@@ -21,7 +21,7 @@ namespace Ma5zonyProject.Controllers
             _store = store;
             _product = product;
         }
-        [HttpGet("/get-products-for-store/{storeId}")]
+        [HttpGet("get-products-for-store/{storeId}")]
         public IActionResult GetProductsForStore(int storeId, int pageNumber = 1, int pageSize = 5)
         {
             var res=new Result<List<ProductsVM>>();
@@ -49,7 +49,7 @@ namespace Ma5zonyProject.Controllers
             res.Total = sp.Total;
             return Ok(res);
         }
-        [HttpGet("/get-Stores-for-product/{productId}")]
+        [HttpGet("get-Stores-for-product/{productId}")]
         public IActionResult GetStoresForProduct(int productId, int pageNumber = 1, int pageSize = 5)
         {
             var res = new Result<List<StoreForProductVM>>();
