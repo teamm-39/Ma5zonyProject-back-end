@@ -123,5 +123,79 @@ namespace Ma5zonyProject.Controllers
             res.IsSuccess = true;
             return Ok(res);
         }
+        [HttpGet("getAllWithoutPagination")]
+        public async Task<IActionResult> GetAllWithoutPagination(
+                DateTime? FromDateTime = null, DateTime? ToDateTime = null,
+    string? oldName = null, string newName = null,
+    string? oldEmail = null, string? newEmail = null,
+    string? oldPhoneNumber = null, string? newPhoneNumber = null,
+    string? userName = null, int? operationType = null)
+        {
+            var res = new Result<List<CustomerSupplierLogVM>>();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null || user.IsDeleted == true)
+            {
+                res.Meesage = "يرجى تسجيل الدخول اولا";
+                return Unauthorized(res);
+            }
+            if (FromDateTime > DateTime.Now || ToDateTime > DateTime.Now)
+            {
+                res.Meesage = "التاريخ يجب ان يكون بحد اقصى اليوم";
+                return BadRequest(res);
+            }
+            var filters = new Dictionary<string, object>();
+
+            if (!string.IsNullOrWhiteSpace(userName))
+                filters.Add("ApplicationUser.Name", userName);
+
+            if (operationType.HasValue)
+            {
+                filters.Add("LookupOperationTypeId", operationType);
+            }
+            if (!string.IsNullOrWhiteSpace(oldName))
+            {
+                filters.Add("OldName", oldName);
+            }
+            if (!string.IsNullOrWhiteSpace(newName))
+            {
+                filters.Add("NewName", newName);
+            }
+            if (!string.IsNullOrWhiteSpace(oldEmail))
+            {
+                filters.Add("OldEmail", oldEmail);
+            }
+            if (!string.IsNullOrWhiteSpace(newEmail))
+            {
+                filters.Add("NewEmail", newEmail);
+            }
+            if (!string.IsNullOrWhiteSpace(oldPhoneNumber))
+            {
+                filters.Add("OldPhoneNumber", oldPhoneNumber);
+            }
+            if (!string.IsNullOrWhiteSpace(newPhoneNumber))
+            {
+                filters.Add("NewPhoneNumber", newPhoneNumber);
+            }
+            Expression<Func<CustomerSupplierLog, bool>> dateFilter = null;
+            var to = ToDateTime?.Date.AddDays(1);
+            if (FromDateTime.HasValue && ToDateTime.HasValue)
+            {
+                dateFilter = log => log.DateTime >= FromDateTime.Value.Date && log.DateTime < to.Value;
+            }
+            else if (FromDateTime.HasValue)
+            {
+                dateFilter = log => log.DateTime >= FromDateTime.Value.Date;
+            }
+            else if (ToDateTime.HasValue)
+            {
+                dateFilter = log => log.DateTime < to.Value;
+            }
+            filters.Add("LookupCustomerSupplierTypeId", 1);
+            res.Data = _log.GetAllWithoutPagination(filters: filters, expression: dateFilter, includes: [e => e.ApplicationUser]);
+            res.IsSuccess = true;
+            res.Total = res.Data.Count;
+            return Ok(res);
+        }
     }
 }
