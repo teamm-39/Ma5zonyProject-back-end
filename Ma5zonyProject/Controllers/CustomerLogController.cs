@@ -26,7 +26,7 @@ namespace Ma5zonyProject.Controllers
 
         [HttpGet]
         public async Task<IActionResult> GetAll(int pageSize = 5, int pageNumber = 1,
-            DateTime? FromDateTime = null, DateTime? ToDateTime = null,
+            DateTime? fromDateTime = null, DateTime? toDateTime = null,
             string? oldName = null, string newName = null,
             string? oldEmail = null, string? newEmail = null,
             string? oldPhoneNumber = null, string? newPhoneNumber = null,
@@ -45,7 +45,7 @@ namespace Ma5zonyProject.Controllers
                 res.Meesage = "رقم الصفحة وعدد العناصر يجب أن يكونا أكبر من الصفر";
                 return BadRequest(res);
             }
-            if (FromDateTime > DateTime.Now || ToDateTime > DateTime.Now)
+            if (fromDateTime > DateTime.Now || toDateTime > DateTime.Now)
             {
                 res.Meesage = "التاريخ يجب ان يكون بحد اقصى اليوم";
                 return BadRequest(res);
@@ -84,16 +84,16 @@ namespace Ma5zonyProject.Controllers
                 filters.Add("NewPhoneNumber", newPhoneNumber);
             }
             Expression<Func<CustomerSupplierLog, bool>> dateFilter = null;
-            var to = ToDateTime?.Date.AddDays(1);
-            if (FromDateTime.HasValue && ToDateTime.HasValue)
+            var to = toDateTime?.Date.AddDays(1);
+            if (fromDateTime.HasValue && toDateTime.HasValue)
             {
-                dateFilter = log => log.DateTime >= FromDateTime.Value.Date && log.DateTime < to.Value;
+                dateFilter = log => log.DateTime >= fromDateTime.Value.Date && log.DateTime < to.Value;
             }
-            else if (FromDateTime.HasValue)
+            else if (fromDateTime.HasValue)
             {
-                dateFilter = log => log.DateTime >= FromDateTime.Value.Date;
+                dateFilter = log => log.DateTime >= fromDateTime.Value.Date;
             }
-            else if (ToDateTime.HasValue)
+            else if (toDateTime.HasValue)
             {
                 dateFilter = log => log.DateTime < to.Value;
             }
@@ -127,7 +127,7 @@ namespace Ma5zonyProject.Controllers
         }
         [HttpGet("getAllWithoutPagination")]
         public async Task<IActionResult> GetAllWithoutPagination(
-                        DateTime? FromDateTime = null, DateTime? ToDateTime = null,
+                        DateTime? fromDateTime = null, DateTime? toDateTime = null,
             string? oldName = null, string newName = null,
             string? oldEmail = null, string? newEmail = null,
             string? oldPhoneNumber = null, string? newPhoneNumber = null,
@@ -141,7 +141,7 @@ namespace Ma5zonyProject.Controllers
                 res.Meesage = "يرجى تسجيل الدخول اولا";
                 return Unauthorized(res);
             }
-            if (FromDateTime > DateTime.Now || ToDateTime > DateTime.Now)
+            if (fromDateTime > DateTime.Now || toDateTime > DateTime.Now)
             {
                 res.Meesage = "التاريخ يجب ان يكون بحد اقصى اليوم";
                 return BadRequest(res);
@@ -180,16 +180,16 @@ namespace Ma5zonyProject.Controllers
                 filters.Add("NewPhoneNumber", newPhoneNumber);
             }
             Expression<Func<CustomerSupplierLog, bool>> dateFilter = null;
-            var to = ToDateTime?.Date.AddDays(1);
-            if (FromDateTime.HasValue && ToDateTime.HasValue)
+            var to = toDateTime?.Date.AddDays(1);
+            if (fromDateTime.HasValue && toDateTime.HasValue)
             {
-                dateFilter = log => log.DateTime >= FromDateTime.Value.Date && log.DateTime < to.Value;
+                dateFilter = log => log.DateTime >= fromDateTime.Value.Date && log.DateTime < to.Value;
             }
-            else if (FromDateTime.HasValue)
+            else if (fromDateTime.HasValue)
             {
-                dateFilter = log => log.DateTime >= FromDateTime.Value.Date;
+                dateFilter = log => log.DateTime >= fromDateTime.Value.Date;
             }
-            else if (ToDateTime.HasValue)
+            else if (toDateTime.HasValue)
             {
                 dateFilter = log => log.DateTime < to.Value;
             }
