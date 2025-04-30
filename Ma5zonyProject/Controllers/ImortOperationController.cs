@@ -1,5 +1,6 @@
 ﻿using DataAccess.IRepos;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Models.Models;
 using Models.ViewModels;
@@ -17,7 +18,9 @@ namespace Ma5zonyProject.Controllers
         private OperationStoreProductIRepo _operationStoreProduct;
         private StoreProductIRepo _storeProduct;
         private CustomerSupplierIRepo _supplier;
-        public ImortOperationController(OperationIRepo operation, OperationStoreProductIRepo operationStoreProduct, StoreIRepo store, ProductIRepo product, StoreProductIRepo storeProduct, CustomerSupplierIRepo supplier)
+        private UserManager<ApplicationUser> _userManager;
+
+        public ImortOperationController(OperationIRepo operation, UserManager<ApplicationUser> userManager, OperationStoreProductIRepo operationStoreProduct, StoreIRepo store, ProductIRepo product, StoreProductIRepo storeProduct, CustomerSupplierIRepo supplier)
         {
             _operation = operation;
             _operationStoreProduct = operationStoreProduct;
@@ -25,6 +28,7 @@ namespace Ma5zonyProject.Controllers
             _product = product;
             _storeProduct = storeProduct;
             _supplier = supplier;
+            _userManager = userManager;
         }
         [HttpGet]
         public IActionResult GetAll(int pageNumber = 1, int pageSize = 5, DateTime? dateTime = null, string? userName = null, string? supplierName = null)
@@ -354,6 +358,31 @@ namespace Ma5zonyProject.Controllers
             _operationStoreProduct.commit();
             _operation.commit();
             res.IsSuccess=true;
+            return Ok(res);
+        }
+        [HttpGet("get-total-operations-in-year")]
+        public async Task<IActionResult> GetTotalOperationsInYear(int year)
+        {
+            var res = new Result<List<TotalPriceInMonth>>();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null || user.IsDeleted == true)
+            {
+                res.Meesage = "يرجى تسجيل الدخول اولا";
+                return Unauthorized(res);
+            }
+            if (year > DateTime.Now.Year)
+            {
+                res.Meesage = "لا يمكن ادخال سنه اكبر من السنه الحاليه";
+                return BadRequest(res);
+            }
+            if (year < 2025)
+            {
+                res.Meesage = "النظام يبدأ من سنة 2025 لا يمكن ادخال سنه اقل من ذلك";
+                return BadRequest(res);
+            }
+            res.Data = _operation.GetTotalInAlMonths(year, StaticData.ImportOperation);
+            res.IsSuccess = true;
             return Ok(res);
         }
     }

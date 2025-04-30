@@ -253,5 +253,32 @@ namespace Ma5zonyProject.Controllers
             res.IsSuccess = true;
             return Ok(res);
         }
+        [HttpGet("get-products-below-minimum")]
+        public async Task<IActionResult> GetProductsBelowMinimum(int pageNumber=1,int pageSize = 5)
+        {
+            var res=new Result<List<ProductsVM>>();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null || user.IsDeleted == true)
+            {
+                res.Meesage = "يرجى تسجيل الدخول اولا";
+                return Unauthorized(res);
+            }
+            var data=_product.GetAll(pageSize:pageSize,pageNumber:pageNumber,expression:e=>e.Quantity<e.MinLimit);
+            res.Data=data.Data?.Select(e=>new ProductsVM
+            {
+                MinLimit=e.MinLimit,
+                Name=e.Name,
+                ProductId=e.ProductId,
+                PurchasePrice=e.PurchasePrice,
+                Quantity=e.Quantity,
+                SellingPrice=e.SellingPrice,
+            }).ToList();
+            res.IsSuccess = true;
+            res.Total = data.Total;
+            res.PageSize = pageSize;
+            res.PageNumber=pageNumber;
+            return Ok(res);
+        } 
     }
 }
