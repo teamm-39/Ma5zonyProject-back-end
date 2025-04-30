@@ -376,9 +376,9 @@ namespace Ma5zonyProject.Controllers
                 res.Meesage = "لا يمكن ادخال سنه اكبر من السنه الحاليه";
                 return BadRequest(res);
             }
-            if (year < 2025)
+            if (year < 2024)
             {
-                res.Meesage = "النظام يبدأ من سنة 2025 لا يمكن ادخال سنه اقل من ذلك";
+                res.Meesage = "النظام يبدأ من سنة 2024 لا يمكن ادخال سنه اقل من ذلك";
                 return BadRequest(res);
             }
             res.Data = _operation.GetTotalInAlMonths(year, StaticData.ImportOperation);

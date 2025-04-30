@@ -125,7 +125,7 @@ namespace Ma5zonyProject.Controllers
                 var applicationUser = await _userManager.FindByEmailAsync(user.Email);
                 if (applicationUser != null && await _userManager.CheckPasswordAsync(applicationUser, user.Password))
                 {
-                    await _signInManager.SignInAsync(applicationUser,isPersistent: true);
+                    await _signInManager.SignInAsync(applicationUser, isPersistent: true);
                     result.IsSuccess = true;
                     return Ok(result);
                 }
@@ -149,13 +149,40 @@ namespace Ma5zonyProject.Controllers
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null || user.IsDeleted == true)
             {
-                result.Meesage = "يرجى تسجيل الدخول اولا";
+                result.Meesage = "يرجى تسجيل الدخول";
                 result.Data = false;
-                result.IsSuccess=true;
+                result.IsSuccess = true;
                 return Unauthorized(result);
             }
             result.Data = true;
             return Ok(result);
+        }
+        [HttpGet("get-user-profile")]
+        public async Task<IActionResult> GetUserProfile()
+        {
+            var res = new Result<UserProfileVM>();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null || user.IsDeleted == true)
+            {
+                res.Meesage = "يرجى تسجيل الدخول";
+                return BadRequest(res);
+            }
+            var roles = await _userManager.GetRolesAsync(user);
+            var roleName=roles.FirstOrDefault();
+            res.Data = new UserProfileVM
+            {
+                UserName = user.UserName,
+                Name = user.Name,
+                Email = user.Email,
+                PhoneNumber = user.PhoneNumber,
+                Address = user.Address,
+                Age = user.Age,
+                ImgUrl = user.ImgUrl,
+                RoleName=roleName
+            };
+            res.IsSuccess = true;
+            return Ok(res);
         }
     }
 }
