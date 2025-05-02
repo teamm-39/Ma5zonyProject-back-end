@@ -43,7 +43,7 @@ namespace DataAccess.Rpos
         public List<TotalPriceInMonth> GetTotalInAlMonths(
 int year,int operationType)
         {
-            var data = _context.Operations.Where(e => e.DateTime.Year == year&&e.LookupOperationTypeId==operationType).GroupBy(e => new { e.DateTime.Year, e.DateTime.Month }).ToList()
+            var data = _context.Operations.Where(e => e.DateTime.Year == year&&e.LookupOperationTypeId==operationType&&e.IsDeleted==false).GroupBy(e => new { e.DateTime.Year, e.DateTime.Month }).ToList()
                 .Select(e => new TotalPriceInMonth
                 {
                     MonthName = CultureInfo.GetCultureInfo("ar-EG").DateTimeFormat.GetMonthName(e.Key.Month),

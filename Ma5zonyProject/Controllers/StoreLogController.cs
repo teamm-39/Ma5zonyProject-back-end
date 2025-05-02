@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Models.Models;
 using Models.ViewModels;
+using System;
 using System.Linq.Expressions;
 using System.Security.Claims;
 using Utility;
@@ -24,7 +25,8 @@ namespace Ma5zonyProject.Controllers
             _userManager = userManager;
         }
         [HttpGet]
-        public async Task<IActionResult> GetAll(int pageSize = 5, int pageNumber = 1, DateTime? dateTime = null, string? oldStoreName=null, string? newStoreName = null, string? userName=null, int? operationType=null)
+        public async Task<IActionResult> GetAll(int pageSize = 5, int pageNumber = 1, DateTime? fromDateTime = null,
+            DateTime? toDateTime = null, string? oldStoreName = null, string? newStoreName = null, string? userName = null, int? operationType = null)
         {
             var res = new Result<List<StoreLogVM>>();
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -39,7 +41,7 @@ namespace Ma5zonyProject.Controllers
                 res.Meesage = "رقم الصفحة وعدد العناصر يجب أن يكونا أكبر من الصفر";
                 return BadRequest(res);
             }
-            if (dateTime > DateTime.Now)
+            if (fromDateTime > DateTime.Now || toDateTime > DateTime.Now)
             {
                 res.Meesage = "التاريخ يجب ان يكون بحد اقصى اليوم";
                 return BadRequest(res);
@@ -50,8 +52,20 @@ namespace Ma5zonyProject.Controllers
             if (!string.IsNullOrWhiteSpace(userName))
                 filters.Add("ApplicationUser.Name", userName);
 
-            if (dateTime.HasValue)
-                filters.Add("DateTime", dateTime.Value);
+            Expression<Func<StoreLog, bool>> dateFilter = null;
+            var to = toDateTime?.Date.AddDays(1);
+            if (fromDateTime.HasValue && toDateTime.HasValue)
+            {
+                dateFilter = log => log.DateTime >= fromDateTime.Value.Date && log.DateTime < to.Value;
+            }
+            else if (fromDateTime.HasValue)
+            {
+                dateFilter = log => log.DateTime >= fromDateTime.Value.Date;
+            }
+            else if (toDateTime.HasValue)
+            {
+                dateFilter = log => log.DateTime < to.Value;
+            }
 
             if (operationType.HasValue)
             {
@@ -60,25 +74,26 @@ namespace Ma5zonyProject.Controllers
 
             if (!string.IsNullOrWhiteSpace(oldStoreName))
             {
-                filters.Add("OldName",oldStoreName);
+                filters.Add("OldName", oldStoreName);
             }
             if (!string.IsNullOrWhiteSpace(newStoreName))
             {
                 filters.Add("NewName", newStoreName);
             }
-            var log = _log.GetAll(pageSize: pageSize, pageNumber: pageNumber, includes: [e => e.ApplicationUser], filters: filters);
-            res.Data = log.Data.Select(e => new StoreLogVM {
-            LookupOperationTypeId=e.LookupOperationTypeId,
-            Message=e.Message,
-            NewCity=e.NewCity,
-            NewCountry=e.NewCountry,
-            DateTime=e.DateTime,
-            NewName=e.NewName,
-            OldCountry=e.OldCountry,
-            OldName=e.OldName,
-            OlgCity=e.OldCity,
-            StoreLogId=e.StoreLogId,
-            UserName=e.ApplicationUser.Name
+            var log = _log.GetAll(pageSize: pageSize, pageNumber: pageNumber, includes: [e => e.ApplicationUser], filters: filters,expression:dateFilter);
+            res.Data = log.Data.Select(e => new StoreLogVM
+            {
+                LookupOperationTypeId = e.LookupOperationTypeId,
+                Message = e.Message,
+                NewCity = e.NewCity,
+                NewCountry = e.NewCountry,
+                DateTime = e.DateTime,
+                NewName = e.NewName,
+                OldCountry = e.OldCountry,
+                OldName = e.OldName,
+                OlgCity = e.OldCity,
+                StoreLogId = e.StoreLogId,
+                UserName = e.ApplicationUser.Name
             }).ToList();
             res.IsSuccess = true;
             res.Total = log.Total;
@@ -87,7 +102,8 @@ namespace Ma5zonyProject.Controllers
             return Ok(res);
         }
         [HttpGet("getAllWithoutPagination")]
-        public async Task<IActionResult> GetAllWithoutPagination(string? oldStoreName, string? newStoreName, DateTime? dateTime = null, string? userName = null, int? operationType = null)
+        public async Task<IActionResult> GetAllWithoutPagination(string? oldStoreName, string? newStoreName, DateTime? fromDateTime = null,
+            DateTime? toDateTime = null, string? userName = null, int? operationType = null)
         {
             var res = new Result<List<StoreLogVM>>();
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -97,7 +113,7 @@ namespace Ma5zonyProject.Controllers
                 res.Meesage = "يرجى تسجيل الدخول اولا";
                 return Unauthorized(res);
             }
-            if (dateTime > DateTime.Now)
+            if (fromDateTime > DateTime.Now || toDateTime > DateTime.Now)
             {
                 res.Meesage = "التاريخ يجب ان يكون بحد اقصى اليوم";
                 return BadRequest(res);
@@ -108,8 +124,20 @@ namespace Ma5zonyProject.Controllers
             if (!string.IsNullOrWhiteSpace(userName))
                 filters.Add("ApplicationUser.Name", userName);
 
-            if (dateTime.HasValue)
-                filters.Add("DateTime", dateTime.Value);
+            Expression<Func<StoreLog, bool>> dateFilter = null;
+            var to = toDateTime?.Date.AddDays(1);
+            if (fromDateTime.HasValue && toDateTime.HasValue)
+            {
+                dateFilter = log => log.DateTime >= fromDateTime.Value.Date && log.DateTime < to.Value;
+            }
+            else if (fromDateTime.HasValue)
+            {
+                dateFilter = log => log.DateTime >= fromDateTime.Value.Date;
+            }
+            else if (toDateTime.HasValue)
+            {
+                dateFilter = log => log.DateTime < to.Value;
+            }
 
             if (operationType.HasValue)
             {
@@ -123,9 +151,9 @@ namespace Ma5zonyProject.Controllers
             {
                 filters.Add("NewName", newStoreName);
             }
-            res.Data = _log.GetAllWithoutPagination(includes: [e=>e.ApplicationUser],filters: filters);
-            res.IsSuccess=true;
-            res.Total= res.Data.Count;
+            res.Data = _log.GetAllWithoutPagination(includes: [e => e.ApplicationUser], filters: filters,expression:dateFilter);
+            res.IsSuccess = true;
+            res.Total = res.Data.Count;
             return Ok(res);
         }
     }

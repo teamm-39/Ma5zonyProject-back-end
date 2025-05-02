@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Models.Models;
 using Models.ViewModels;
+using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Security.Claims;
@@ -27,7 +28,8 @@ namespace Ma5zonyProject.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll(int pageSize = 5,
             int pageNumber = 1,
-            DateTime? dateTime = null,
+            DateTime? fromDateTime = null,
+            DateTime? toDateTime = null,
             string? oldProductName = null,
             string? newProductName = null,
             double? oldSellingPrice = null,
@@ -50,7 +52,7 @@ namespace Ma5zonyProject.Controllers
                 res.Meesage = "رقم الصفحة وعدد العناصر يجب أن يكونا أكبر من الصفر";
                 return BadRequest(res);
             }
-            if (dateTime > DateTime.Now)
+            if (fromDateTime > DateTime.Now || toDateTime > DateTime.Now)
             {
                 res.Meesage = "التاريخ يجب ان يكون بحد اقصى اليوم";
                 return BadRequest(res);
@@ -65,8 +67,21 @@ namespace Ma5zonyProject.Controllers
             if (!string.IsNullOrWhiteSpace(userName))
                 filters.Add("ApplicationUser.Name", userName);
 
-            if (dateTime.HasValue)
-                filters.Add("DateTime", dateTime.Value);
+            Expression<Func<ProductLog, bool>> dateFilter = null;
+            var to = toDateTime?.Date.AddDays(1);
+            if (fromDateTime.HasValue && toDateTime.HasValue)
+            {
+                dateFilter = log => log.DateTime >= fromDateTime.Value.Date && log.DateTime < to.Value;
+            }
+            else if (fromDateTime.HasValue)
+            {
+                dateFilter = log => log.DateTime >= fromDateTime.Value.Date;
+            }
+            else if (toDateTime.HasValue)
+            {
+                dateFilter = log => log.DateTime < to.Value;
+            }
+
 
             if (operationType.HasValue)
                 filters.Add("LookupOperationTypeId", operationType);
@@ -89,7 +104,7 @@ namespace Ma5zonyProject.Controllers
             if (newPurchasePrice.HasValue)
                 filters.Add("NewPurchasePrice", newPurchasePrice.Value);
 
-            var data = _log.GetAll(pageSize: pageSize, pageNumber: pageNumber, filters: filters, includes: [e => e.ApplicationUser]);
+            var data = _log.GetAll(pageSize: pageSize, pageNumber: pageNumber, filters: filters, includes: [e => e.ApplicationUser],expression:dateFilter);
             res.IsSuccess = true;
             res.PageSize = pageSize;
             res.PageNumber = pageNumber;
@@ -114,7 +129,8 @@ namespace Ma5zonyProject.Controllers
         }
         [HttpGet("getAllWithoutPagination")]
         public async Task<IActionResult> GetAllWithoutPagination(
-                        DateTime? dateTime = null,
+                                    DateTime? fromDateTime = null,
+            DateTime? toDateTime = null,
             string? oldProductName = null,
             string? newProductName = null,
             double? oldSellingPrice = null,
@@ -132,7 +148,7 @@ namespace Ma5zonyProject.Controllers
                 res.Meesage = "يرجى تسجيل الدخول اولا";
                 return Unauthorized(res);
             }
-            if (dateTime > DateTime.Now)
+            if (fromDateTime > DateTime.Now || toDateTime > DateTime.Now)
             {
                 res.Meesage = "التاريخ يجب ان يكون بحد اقصى اليوم";
                 return BadRequest(res);
@@ -142,13 +158,26 @@ namespace Ma5zonyProject.Controllers
                 res.Meesage = "سعر الشراء وسعر البيع يجب ان يكونوا اكبر من الصفر";
                 return BadRequest(res);
             }
+            Expression<Func<ProductLog, bool>> dateFilter = null;
+            var to = toDateTime?.Date.AddDays(1);
+            if (fromDateTime.HasValue && toDateTime.HasValue)
+            {
+                dateFilter = log => log.DateTime >= fromDateTime.Value.Date && log.DateTime < to.Value;
+            }
+            else if (fromDateTime.HasValue)
+            {
+                dateFilter = log => log.DateTime >= fromDateTime.Value.Date;
+            }
+            else if (toDateTime.HasValue)
+            {
+                dateFilter = log => log.DateTime < to.Value;
+            }
+
             var filters = new Dictionary<string, object>();
 
             if (!string.IsNullOrWhiteSpace(userName))
                 filters.Add("ApplicationUser.Name", userName);
 
-            if (dateTime.HasValue)
-                filters.Add("DateTime", dateTime.Value);
 
             if (operationType.HasValue)
                 filters.Add("LookupOperationTypeId", operationType);
@@ -170,7 +199,7 @@ namespace Ma5zonyProject.Controllers
 
             if (newPurchasePrice.HasValue)
                 filters.Add("NewPurchasePrice", newPurchasePrice.Value);
-            var data = _log.GetAllWithoutPagination(includes: [e=>e.ApplicationUser],filters: filters);
+            var data = _log.GetAllWithoutPagination(includes: [e=>e.ApplicationUser],filters: filters,expression:dateFilter);
             res.Data= data;
             res.IsSuccess= true;
             res.Total = data.Count;

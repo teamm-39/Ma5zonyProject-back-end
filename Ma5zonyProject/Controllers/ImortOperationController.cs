@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Models.Models;
 using Models.ViewModels;
+using System.Linq.Expressions;
 using System.Security.Claims;
 using Utility;
 namespace Ma5zonyProject.Controllers
@@ -31,7 +32,7 @@ namespace Ma5zonyProject.Controllers
             _userManager = userManager;
         }
         [HttpGet]
-        public IActionResult GetAll(int pageNumber = 1, int pageSize = 5, DateTime? dateTime = null, string? userName = null, string? supplierName = null)
+        public IActionResult GetAll(int pageNumber = 1, int pageSize = 5, DateTime? fromDateTime = null, DateTime? toDateTime = null, string? userName = null, string? supplierName = null)
         {
             var res = new Result<List<ImportsVM>>();
             if (pageSize <= 0 || pageNumber <= 0)
@@ -41,13 +42,31 @@ namespace Ma5zonyProject.Controllers
             }
             var filters = new Dictionary<string, object>
             {
-                { "LookupOperationTypeId", StaticData.ImportOperation }
+                { "LookupOperationTypeId", StaticData.ImportOperation
+                },{
+                "IsDeleted",false}
             };
             if (!string.IsNullOrWhiteSpace(userName))
                 filters.Add("ApplicationUser.Name", userName);
-
-            if (dateTime.HasValue)
-                filters.Add("DateTime", dateTime.Value);
+            if (fromDateTime > DateTime.Now || toDateTime > DateTime.Now)
+            {
+                res.Meesage = "التاريخ يجب ان يكون بحد اقصى اليوم";
+                return BadRequest(res);
+            }
+            Expression<Func<Operation, bool>> dateFilter = null;
+            var to = toDateTime?.Date.AddDays(1);
+            if (fromDateTime.HasValue && toDateTime.HasValue)
+            {
+                dateFilter = log => log.DateTime >= fromDateTime.Value.Date && log.DateTime < to.Value;
+            }
+            else if (fromDateTime.HasValue)
+            {
+                dateFilter = log => log.DateTime >= fromDateTime.Value.Date;
+            }
+            else if (toDateTime.HasValue)
+            {
+                dateFilter = log => log.DateTime < to.Value;
+            }
 
             if (!string.IsNullOrWhiteSpace(supplierName))
                 filters.Add("CustomerSupplier.Name", supplierName);
@@ -55,7 +74,7 @@ namespace Ma5zonyProject.Controllers
             var data = _operation.GetAll(
                 pageSize: pageSize, pageNumber: pageNumber,
                 includes: [e => e.CustomerSupplier, e => e.ApplicationUser],
-                filters: filters ,expression:e=>e.IsDeleted==false);
+                filters: filters, expression: dateFilter);
 
             var importsOperations = data?.Data?.Select(op => new ImportsVM
             {
@@ -87,7 +106,7 @@ namespace Ma5zonyProject.Controllers
                 res.Meesage = "يرجى تسجيل الدخول اولا";
                 return BadRequest(res);
             }
-            var getSupplier = _supplier.GetOne(e => e.CustomerSupplierId == importOperation.SupplierId && e.IsDeleted == false&&e.LookupCustomerSupplierTypeId==1);
+            var getSupplier = _supplier.GetOne(e => e.CustomerSupplierId == importOperation.SupplierId && e.IsDeleted == false && e.LookupCustomerSupplierTypeId == 1);
             if (getSupplier == null)
             {
                 res.Meesage = "يرجى ادخال المورد بشكل صحيح";
@@ -149,7 +168,7 @@ namespace Ma5zonyProject.Controllers
         public IActionResult GetOPeration(int id)
         {
             var res = new Result<OperationVM>();
-            var operation = _operation.GetOne(e => e.OperationId == id&& e.IsDeleted==false && e.LookupOperationTypeId == StaticData.ImportOperation, includes: [e => e.ApplicationUser, e => e.CustomerSupplier]);
+            var operation = _operation.GetOne(e => e.OperationId == id && e.IsDeleted == false && e.LookupOperationTypeId == StaticData.ImportOperation, includes: [e => e.ApplicationUser, e => e.CustomerSupplier]);
             if (operation == null)
             {
                 res.Meesage = "لم يتم العثور على هذه العمليه ";
@@ -161,7 +180,7 @@ namespace Ma5zonyProject.Controllers
                 DateTime = operation.DateTime,
                 UserName = operation.ApplicationUser.Name,
                 SupplierName = operation.CustomerSupplier.Name,
-                SupplierId=operation.CustomerSupplierId,
+                SupplierId = operation.CustomerSupplierId,
                 TotalPrice = operation.TotalPrice
             };
             res.Data = operationVM;
@@ -178,7 +197,7 @@ namespace Ma5zonyProject.Controllers
             }
             var products = _operationStoreProduct.GetAll
                 (
-                expression: e => e.OperationId == id && e.IsDeleted==false ,
+                expression: e => e.OperationId == id && e.IsDeleted == false,
                 includes: [e => e.Product, e => e.ToStore],
                 pageSize: pageSize, pageNumber: pageNumber
                 );
@@ -237,7 +256,7 @@ namespace Ma5zonyProject.Controllers
         public IActionResult Edit(int id, ImportOperationCreateVM operationVM)
         {
             var res = new Result<ImportOperationCreateVM>();
-            var operation = _operation.GetOne(e => e.OperationId == id && e.LookupOperationTypeId == StaticData.ImportOperation && e.IsDeleted==false);
+            var operation = _operation.GetOne(e => e.OperationId == id && e.LookupOperationTypeId == StaticData.ImportOperation && e.IsDeleted == false);
             if (operation == null)
             {
                 res.Meesage = "لم يتم العثور على العمليه";
@@ -319,14 +338,15 @@ namespace Ma5zonyProject.Controllers
         public IActionResult Delete(int id)
         {
             var res = new Result<OperationVM>();
-            var operation = _operation.GetOne(e => e.OperationId == id && e.IsDeleted == false &&e.LookupOperationTypeId==StaticData.ImportOperation);
+            var operation = _operation.GetOne(e => e.OperationId == id && e.IsDeleted == false && e.LookupOperationTypeId == StaticData.ImportOperation);
             if (operation == null)
             {
                 res.Meesage = "لم يتم العثور على هذه العمليه";
                 return BadRequest(res);
             }
             var supplier = _supplier.GetOne(e => e.CustomerSupplierId == operation.CustomerSupplierId && e.LookupCustomerSupplierTypeId == 1);
-            if (supplier == null) {
+            if (supplier == null)
+            {
                 res.Meesage = "لم يتم العثور على مورد هذه العمليه";
                 return BadRequest(res);
             }
@@ -357,7 +377,7 @@ namespace Ma5zonyProject.Controllers
             _product.commit();
             _operationStoreProduct.commit();
             _operation.commit();
-            res.IsSuccess=true;
+            res.IsSuccess = true;
             return Ok(res);
         }
         [HttpGet("get-total-operations-in-year")]

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Models.Models;
 using Models.ViewModels;
+using System.Linq.Expressions;
 using System.Security.Claims;
 using Utility;
 
@@ -32,7 +33,7 @@ namespace Ma5zonyProject.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetAll(int pageNumber = 1, int pageSize = 5, DateTime? dateTime = null, string? userName = null, string? customerName = null)
+        public IActionResult GetAll(int pageNumber = 1, int pageSize = 5, DateTime? fromDateTime = null, DateTime? toDateTime = null, string? userName = null, string? customerName = null)
         {
             var res = new Result<List<ExportsVM>>();
             if (pageSize <= 0 || pageNumber <= 0)
@@ -42,13 +43,30 @@ namespace Ma5zonyProject.Controllers
             }
             var filters = new Dictionary<string, object>
             {
-                { "LookupOperationTypeId", StaticData.ExportOperation }
+                { "LookupOperationTypeId", StaticData.ExportOperation },{
+                "IsDeleted",false}
             };
+            if (fromDateTime > DateTime.Now || toDateTime > DateTime.Now)
+            {
+                res.Meesage = "التاريخ يجب ان يكون بحد اقصى اليوم";
+                return BadRequest(res);
+            }
             if (!string.IsNullOrWhiteSpace(userName))
                 filters.Add("ApplicationUser.Name", userName);
-
-            if (dateTime.HasValue)
-                filters.Add("DateTime", dateTime.Value);
+            Expression<Func<Operation, bool>> dateFilter = null;
+            var to = toDateTime?.Date.AddDays(1);
+            if (fromDateTime.HasValue && toDateTime.HasValue)
+            {
+                dateFilter = log => log.DateTime >= fromDateTime.Value.Date && log.DateTime < to.Value;
+            }
+            else if (fromDateTime.HasValue)
+            {
+                dateFilter = log => log.DateTime >= fromDateTime.Value.Date;
+            }
+            else if (toDateTime.HasValue)
+            {
+                dateFilter = log => log.DateTime < to.Value;
+            }
 
             if (!string.IsNullOrWhiteSpace(customerName))
                 filters.Add("CustomerSupplier.Name", customerName);
@@ -56,7 +74,7 @@ namespace Ma5zonyProject.Controllers
             var data = _operation.GetAll(
                 pageSize: pageSize, pageNumber: pageNumber,
                 includes: [e => e.CustomerSupplier, e => e.ApplicationUser],
-                filters: filters, expression: e => e.IsDeleted == false);
+                filters: filters, expression: dateFilter);
 
             var ExportsOperations = data?.Data?.Select(op => new ExportsVM
             {
