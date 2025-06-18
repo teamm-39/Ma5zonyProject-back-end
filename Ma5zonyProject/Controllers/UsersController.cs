@@ -26,61 +26,6 @@ namespace Ma5zonyProject.Controllers
             _signInManager = signInManager;
             _roleManager = roleManager;
         }
-        [HttpGet]
-        public async Task<ActionResult> GetAllAdmins(int pageSize = 5, int pageNumber = 1, string? name = null, string? userName = null, int? age = null
-            , string? phone = null, string? address = null)
-        {
-            if (pageNumber > 0 && pageSize > 0)
-            {
-                var users = _userManager.Users.AsQueryable();
-                var adminUsers = new List<AdminsDTO>();
-
-                if (!string.IsNullOrEmpty(name))
-                {
-                    users = users.Where(e => EF.Functions.Like(e.Name, $"%{name}%"));
-                }
-                if (!string.IsNullOrEmpty(userName))
-                {
-                    users = users.Where(e => EF.Functions.Like(e.UserName, $"%{userName}%"));
-                }
-                if (age.HasValue)
-                {
-                    users = users.Where(e => e.Age == age);
-                }
-                if (!string.IsNullOrEmpty(phone))
-                {
-                    users = users.Where(e => EF.Functions.Like(e.PhoneNumber, $"%{phone}%"));
-                }
-                if (!string.IsNullOrEmpty(address))
-                {
-                    users = users.Where(e => EF.Functions.Like(e.Address, $"%{address}%"));
-                }
-                var usersList = await users.AsNoTracking().ToListAsync();
-                foreach (var user in usersList)
-                {
-                    var role = await _userManager.GetRolesAsync(user);
-                    if (role.Contains(StaticData.admin))
-                    {
-                        var adminUser = new AdminsDTO()
-                        {
-                            Id = user.Id,
-                            Address = user.Address,
-                            Email = user.Email,
-                            Name = user.Name,
-                            UserName = user.UserName,
-                            ImgUrl = user.ImgUrl,
-                            PhoneNumber = user.PhoneNumber
-                        };
-                        adminUsers.Add(adminUser);
-                    }
-                }
-                var total = adminUsers.Count();
-                var result = new Result<List<AdminsDTO>>(true, total, pageSize, pageNumber, adminUsers);
-                return Ok(result);
-            }
-            var invalidResult = new Result<List<AdminsDTO>>(false, 0, pageSize, pageNumber, [], "يجب ان يكون رقم الصفحه وعدد العناصر اكبر من الصفر");
-            return BadRequest(invalidResult);
-        }
         [HttpPost("sign-up")]
         public async Task<ActionResult> Register(UserRegisterVM user)
         {
@@ -169,7 +114,7 @@ namespace Ma5zonyProject.Controllers
                 return BadRequest(res);
             }
             var roles = await _userManager.GetRolesAsync(user);
-            var roleName=roles.FirstOrDefault();
+            var roleName = roles.FirstOrDefault();
             res.Data = new UserProfileVM
             {
                 UserName = user.UserName,
@@ -179,8 +124,69 @@ namespace Ma5zonyProject.Controllers
                 Address = user.Address,
                 Age = user.Age,
                 ImgUrl = user.ImgUrl,
-                RoleName=roleName
+                RoleName = roleName
             };
+            res.IsSuccess = true;
+            return Ok(res);
+        }
+        [HttpPut("update-user-profile")]
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> EditUserProfile([FromForm] UserProfileVM userProfile, IFormFile? img)
+        {
+            var res = new Result<UserProfileVM>();
+            var user = await _userManager.FindByIdAsync(userProfile.Id);
+            if (user == null || user.IsDeleted == true)
+            {
+                res.Meesage = "لم يتم العثور على هذا المستخدم";
+                return BadRequest(res);
+            }
+            user.Name = userProfile.Name;
+            user.Email = userProfile.Email;
+            user.PhoneNumber = userProfile.PhoneNumber;
+            user.Address = userProfile.Address;
+            user.Age = userProfile.Age;
+            user.ImgUrl = userProfile.ImgUrl;
+            user.UserName = userProfile.UserName;
+            if (userProfile.Password != null && userProfile.Password != userProfile.ConfirmPassword)
+            {
+                res.Meesage = "كلمة المرور وتأكيد كلمة المرور غير متطابقتين";
+                return BadRequest(res);
+            }
+            if (!string.IsNullOrEmpty(userProfile.Password))
+            {
+                var removeOldPassword = await _userManager.RemovePasswordAsync(user);
+                var addNewPassWord = await _userManager.AddPasswordAsync(user, userProfile.Password);
+                if (!removeOldPassword.Succeeded || !addNewPassWord.Succeeded)
+                {
+                    res.Meesage = "حدث خطأ اثناء تغير كلمة المرور";
+                    return BadRequest(res);
+                }
+            }
+            var folderPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/profilePicture");
+            if (img != null && img.Length > 0)
+            {
+                var allowedExtensions = new HashSet<string> { ".jpg", ".jpeg", ".png", ".bmp" };
+                var imgExtension = Path.GetExtension(img.FileName).ToLower();
+
+                if (!allowedExtensions.Contains(imgExtension))
+                {
+                    res.Meesage = "يُسمح فقط بتحميل الصور بامتدادات: JPG, JPEG, PNG, BMP.";
+                    return BadRequest(res);
+                }
+                var imgEx = Path.GetExtension(img.FileName);
+                if (!string.IsNullOrEmpty(user.ImgUrl))
+                {
+                    FileHelper.DeleteFile(folderPath, user.ImgUrl);
+                }
+                user.ImgUrl = Guid.NewGuid().ToString() + imgEx;
+                await FileHelper.SaveFileAsync(img, folderPath, user.ImgUrl);
+            }
+            var updateUser= await _userManager.UpdateAsync(user);
+            if (!updateUser.Succeeded)
+            {
+                res.Meesage = "حدث خطأ اثناء تحديث المستخدم";
+                return BadRequest(res);
+            }
             res.IsSuccess = true;
             return Ok(res);
         }
