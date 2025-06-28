@@ -104,6 +104,16 @@ namespace DataAccess.Rpos
                             query = query.Where(lambda);
                         }
                     }
+                    else if (propertyAccess.Type == typeof(bool) || propertyAccess.Type == typeof(bool?))
+                    {
+                        if (bool.TryParse(filter.Value.ToString(), out bool boolValue))
+                        {
+                            var value = Expression.Constant(boolValue);
+                            var equalExpression = Expression.Equal(propertyAccess, value);
+                            var lambda = Expression.Lambda<Func<T, bool>>(equalExpression, parameter);
+                            query = query.Where(lambda);
+                        }
+                    }
                 }
             }
             res.Total = query.Count();

@@ -139,7 +139,7 @@ namespace Ma5zonyProject.Controllers
             var supplier = _customer.GetOne(e => e.CustomerSupplierId == id && e.IsDeleted == false && e.LookupCustomerSupplierTypeId == 2);
             if (supplier == null)
             {
-                res.Meesage = "لم يتم العثور على هذا المورد";
+                res.Meesage = "لم يتم العثور على هذا العميل";
                 return BadRequest(res);
             }
             var supplierVM = new CustomerSupplierVM()
@@ -233,7 +233,7 @@ namespace Ma5zonyProject.Controllers
             var customer = _customer.GetOne(e => e.CustomerSupplierId == id && e.IsDeleted == false && e.LookupCustomerSupplierTypeId == 2);
             if (customer == null)
             {
-                res.Meesage = "لم يتم العثور على هذا المورد";
+                res.Meesage = "لم يتم العثور على هذا العميل";
                 return BadRequest(res);
             }
             customer.IsDeleted = true;

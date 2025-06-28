@@ -134,7 +134,8 @@ namespace Ma5zonyProject.Controllers
         public async Task<IActionResult> EditUserProfile([FromForm] UserProfileVM userProfile, IFormFile? img)
         {
             var res = new Result<UserProfileVM>();
-            var user = await _userManager.FindByIdAsync(userProfile.Id);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _userManager.FindByIdAsync(userId);
             if (user == null || user.IsDeleted == true)
             {
                 res.Meesage = "لم يتم العثور على هذا المستخدم";
@@ -145,7 +146,6 @@ namespace Ma5zonyProject.Controllers
             user.PhoneNumber = userProfile.PhoneNumber;
             user.Address = userProfile.Address;
             user.Age = userProfile.Age;
-            user.ImgUrl = userProfile.ImgUrl;
             user.UserName = userProfile.UserName;
             if (userProfile.Password != null && userProfile.Password != userProfile.ConfirmPassword)
             {
@@ -174,6 +174,7 @@ namespace Ma5zonyProject.Controllers
                     return BadRequest(res);
                 }
                 var imgEx = Path.GetExtension(img.FileName);
+
                 if (!string.IsNullOrEmpty(user.ImgUrl))
                 {
                     FileHelper.DeleteFile(folderPath, user.ImgUrl);
